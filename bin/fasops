@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use autodie;
+
+use App::Fasops;
+
+# PODNAME:  fasops
+# ABSTRACT: operating blocked fasta files
+App::Fasops->run;
+
+=head1 OVERVIEW
+
+For help with App::Fasops, run "fasops help"
+
+=cut
+
+__END__
+
+perl -I lib/ bin/fasops
