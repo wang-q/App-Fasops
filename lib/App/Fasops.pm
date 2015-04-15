@@ -10,7 +10,7 @@ use App::Cmd::Setup -app;
 use File::Spec;
 use File::Basename;
 use IO::Zlib;
-use File::Remove qw(remove);
+use File::Remove;
 
 =head1 SYNOPSIS
 
@@ -194,7 +194,7 @@ sub validate_args {
     }
     if ( -e $opt->{outdir} ) {
         if ( $opt->{rm} ) {
-            remove( \1, -e $opt->{outdir} );
+            File::Remove::remove( \1, -e $opt->{outdir} );
         }
         else {
             $self->usage_error(
