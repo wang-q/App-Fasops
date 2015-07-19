@@ -408,8 +408,8 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "output filename" ],
         [   "length|l=i",
-            "the threshold of alignment length, default is [1000]",
-            { default => 1000 }
+            "the threshold of alignment length, default is [1]",
+            { default => 1 }
         ],
     );
 }
@@ -447,7 +447,6 @@ sub execute {
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     open my $out_fh, ">", $opt->{outfile};
 
-
     # read and write
     my $content = '';
 ALN: while ( my $line = <$in_fh> ) {
@@ -481,8 +480,9 @@ ALN: while ( my $line = <$in_fh> ) {
 
             # output
             for my $species (@names) {
-                printf {$out_fh} ">%s\n", App::Fasops::encode_header( $info_of->{$species} );
-                printf {$out_fh} "%s\n",  $info_of->{$species}{seq};
+                printf {$out_fh} ">%s\n",
+                    App::Fasops::encode_header( $info_of->{$species} );
+                printf {$out_fh} "%s\n", $info_of->{$species}{seq};
             }
             print {$out_fh} "\n";
         }

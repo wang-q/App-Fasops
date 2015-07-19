@@ -1,12 +1,10 @@
-# Synopsis
+# fasops: operating blocked fasta files
 
-    $ fasops help
+## Synopsis
 
-# Description
+    fasops help
 
-fasops operates blocked fasta files.
-
-# Command Line Usage
+## Command Line Usage
 
 The following commands are supported.
 
@@ -17,7 +15,7 @@ The following commands are supported.
     fasops axt2fas
     fasops maf2fas
 
-## Global Options
+### Global Options
 
 fasops commands have the following global options:
 
