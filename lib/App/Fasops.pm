@@ -7,10 +7,12 @@ package App::Fasops;
 # ABSTRACT: operating blocked fasta files
 
 use App::Cmd::Setup -app;
+use Carp;
 use File::Spec;
 use File::Basename;
 use IO::Zlib;
 use File::Remove;
+use Tie::IxHash;
 
 =head1 SYNOPSIS
 
@@ -33,54 +35,57 @@ sub decode_header {
                 (\d+)               # chr end
             }xi;
 
-    my $info = {};
+    tie my %info, "Tie::IxHash";
 
     $header =~ $head_qr;
     my $name     = $1;
     my $chr_name = $2;
 
     if ( defined $name ) {
-        $info = {
+        %info = (
             chr_name   => $2,
             chr_strand => $3,
             chr_start  => $4,
             chr_end    => $5,
-        };
-        if ( $info->{chr_strand} eq '1' ) {
-            $info->{chr_strand} = '+';
+        );
+        if ( !defined $info{chr_strand} ) {
+            $info{chr_strand} = '+';
         }
-        elsif ( $info->{chr_strand} eq '-1' ) {
-            $info->{chr_strand} = '-';
+        elsif ( $info{chr_strand} eq '1' ) {
+            $info{chr_strand} = '+';
+        }
+        elsif ( $info{chr_strand} eq '-1' ) {
+            $info{chr_strand} = '-';
         }
     }
     elsif ( defined $chr_name ) {
         $name = $header;
-        $info = {
+        %info = (
             chr_name   => $2,
             chr_strand => $3,
             chr_start  => $4,
             chr_end    => $5,
-        };
-        if ( !defined $info->{chr_strand} ) {
-            $info->{chr_strand} = '+';
+        );
+        if ( !defined $info{chr_strand} ) {
+            $info{chr_strand} = '+';
         }
-        elsif ( $info->{chr_strand} eq '1' ) {
-            $info->{chr_strand} = '+';
+        elsif ( $info{chr_strand} eq '1' ) {
+            $info{chr_strand} = '+';
         }
-        elsif ( $info->{chr_strand} eq '-1' ) {
-            $info->{chr_strand} = '-';
+        elsif ( $info{chr_strand} eq '-1' ) {
+            $info{chr_strand} = '-';
         }
     }
     else {
         $name = $header;
-        $info = {
+        %info = (
             chr_name   => 'chrUn',
             chr_strand => '+',
             chr_start  => undef,
             chr_end    => undef,
-        };
+        );
     }
-    $info->{name} = $name;
+    $info{name} = $name;
 
     # additional keys
     if ( $header =~ /\|(.+)/ ) {
@@ -88,12 +93,12 @@ sub decode_header {
         for my $part (@parts) {
             my ( $key, $value ) = split /=/, $part;
             if ( defined $key and defined $value ) {
-                $info->{$key} = $value;
+                $info{$key} = $value;
             }
         }
     }
 
-    return $info;
+    return \%info;
 }
 
 sub encode_header {
@@ -123,29 +128,27 @@ sub encode_header {
     return $header;
 }
 
-sub write_fasta {
-    my $filename   = shift;
-    my $seq_of     = shift;
-    my $seq_names  = shift;
-    my $real_names = shift;
+sub parse_block {
+    my $block = shift;
 
-    open my $fh, ">", $filename;
-    for my $i ( 0 .. @{$seq_names} - 1 ) {
-        my $seq = $seq_of->{ $seq_names->[$i] };
-        my $header;
-        if ($real_names) {
-            $header = $real_names->[$i];
-        }
-        else {
-            $header = $seq_names->[$i];
-        }
+    my @lines = grep {/\S/} split /\n/, $block;
+    croak "headers not equal to seqs\n" if @lines % 2;
 
-        print {$fh} ">" . $header . "\n";
-        print {$fh} $seq . "\n";
+    tie my %info_of, "Tie::IxHash";
+    while (@lines) {
+        my $header = shift @lines;
+        $header =~ s/^\>//;
+        chomp $header;
+
+        my $seq = shift @lines;
+        chomp $seq;
+
+        my $info_ref = App::Fasops::decode_header($header);
+        $info_ref->{seq} = $seq;
+        $info_of{$header} = $info_ref;
     }
-    close $fh;
 
-    return;
+    return \%info_of;
 }
 
 1;
@@ -212,43 +215,29 @@ sub execute {
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
 
     {
-        my $content = '';
-        while ( my $line = <$in_fh> ) {
-            if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {
-                my @lines = grep {/\S/} split /\n/, $content;
+        my $content = '';    # content of one block
+        while (1) {
+            last if $in_fh->eof and $content eq '';
+            my $line = '';
+            if ( !$in_fh->eof ) {
+                $line = $in_fh->getline;
+            }
+            if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+                my $info_of = App::Fasops::parse_block($content);
                 $content = '';
-                die "headers not equal to seqs\n" if @lines % 2;
-                die "Two few lines in block\n" if @lines < 4;
 
-                my ( @headers, %seq_of, @simple_names );
-                while (@lines) {
+                my $filename = ( keys %{$info_of} )[0];
+                $filename =~ s/\|.+//;    # remove addtional fields
+                $filename =~ s/[\(\)\:]+/./g;
+                $filename .= '.fas';
+                $filename = File::Spec->catfile( $opt->{outdir}, $filename );
 
-                    # header
-                    my $header = shift @lines;
-                    $header =~ s/^\>//;
-                    chomp $header;
-                    push @headers, $header;
-
-                    # seq
-                    my $seq = shift @lines;
-                    chomp $seq;
-                    $seq = uc $seq;
-                    $seq_of{$header} = $seq;
-
-                    # simple name
-                    my $info_ref = App::Fasops::decode_header($header);
-                    push @simple_names, $info_ref->{name};
+                open my $out_fh, ">", $filename;
+                for my $key ( keys %{$info_of} ) {
+                    print {$out_fh} ">" . $info_of->{$key}{name} . "\n";
+                    print {$out_fh} $info_of->{$key}{seq} . "\n";
                 }
-
-                # build info required by write_fasta()
-                my $out_filename = $headers[0];
-                $out_filename =~ s/\|.+//;    # remove addtional fields
-                $out_filename =~ s/[\(\)\:]+/./g;
-                $out_filename .= '.fas';
-                my $out_file
-                    = File::Spec->catfile( $opt->{outdir}, $out_filename );
-                App::Fasops::write_fasta( $out_file, \%seq_of, \@headers,
-                    \@simple_names );
+                close $out_fh;
             }
             else {
                 $content .= $line;
@@ -257,6 +246,97 @@ sub execute {
     }
 
     $in_fh->close;
+}
+
+1;
+
+#----------------------------------------------------------#
+# names
+#----------------------------------------------------------#
+package App::Fasops::Command::names;
+
+use App::Fasops -command;
+
+use constant abstract => 'scan a blocked fasta file and output all names';
+
+sub opt_spec {
+    return (
+        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "count|c",     "Also count name occurrences" ],
+    );
+}
+
+sub usage_desc {
+    my $self = shift;
+    my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
+    $desc .= " <infile>";
+    return $desc;
+}
+
+sub description {
+    my $desc;
+    $desc .= "Scan a blocked fasta file and output all names used in it.\n";
+    $desc
+        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    return $desc;
+}
+
+sub validate_args {
+    my ( $self, $opt, $args ) = @_;
+
+    $self->usage_error("This command need a input file.") unless @$args;
+    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
+        unless -e $args->[0];
+
+    if ( !exists $opt->{outfile} ) {
+        $opt->{outfile} = File::Spec->rel2abs( $args->[0] ) . ".list";
+    }
+}
+
+sub execute {
+    my ( $self, $opt, $args ) = @_;
+
+    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+
+    tie my %count_of, "Tie::IxHash";
+    {
+        my $content = '';    # content of one block
+        while (1) {
+            last if $in_fh->eof and $content eq '';
+            my $line = '';
+            if ( !$in_fh->eof ) {
+                $line = $in_fh->getline;
+            }
+            if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+                my $info_of = App::Fasops::parse_block($content);
+                $content = '';
+
+                for my $key ( keys %{$info_of} ) {
+                    my $name = $info_of->{$key}{name};
+                    $count_of{$name}++;
+                }
+            }
+            else {
+                $content .= $line;
+            }
+        }
+    }
+    $in_fh->close;
+
+    my $out_fh;
+    if ( lc( $opt->{outfile} ) eq "stdout" ) {
+        $out_fh = *STDOUT;
+    }
+    else {
+        open $out_fh, ">", $opt->{outfile};
+    }
+    for ( keys %count_of ) {
+        print {$out_fh} $_;
+        print {$out_fh} "\t" . $count_of{$_} if $opt->{count};
+        print {$out_fh} "\n";
+    }
+    close $out_fh;
+
 }
 
 1;
@@ -274,8 +354,8 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "output filename" ],
         [   "length|l=i",
-            "the threshold of alignment length, default is [1000]",
-            { default => 1000 }
+            "the threshold of alignment length, default is [1]",
+            { default => 1 }
         ],
         [   "tname|t=s",
             "target name, default is [target]",
