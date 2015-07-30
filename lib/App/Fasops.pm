@@ -1,18 +1,18 @@
+package App::Fasops;
 use strict;
 use warnings;
 use autodie;
-
-package App::Fasops;
 
 # ABSTRACT: operating blocked fasta files
 
 use App::Cmd::Setup -app;
 use Carp;
-use Path::Tiny;
 use File::Basename;
+use List::MoreUtils;
 use IO::Zlib;
+use Path::Tiny;
 use Tie::IxHash;
-use YAML::Syck qw(Dump Load DumpFile LoadFile);
+use YAML::Syck;
 
 =head1 SYNOPSIS
 
@@ -325,6 +325,7 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     my @names = @{ App::Fasops::read_names( $args->[1] ) };
+    my %seen = map {$_ => 1} @names;
 
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     my $out_fh;
@@ -351,9 +352,15 @@ sub execute {
                 if ( $opt->{first} ) {
                     $keep = ( keys %{$info_of} )[0];
                 }
+                
+                my @block_names = @names;
+                if ($opt->{first}) {
+                    my $first = (keys %{$info_of})[0];
+                    @block_names = List::MoreUtils::uniq($first, @block_names);
+                }
 
-                for my $name (@names) {
-                    if ( exists( $info_of->{$name} ) or ( $name eq $keep ) ) {
+                for my $name (@block_names) {
+                    if ( exists $info_of->{$name} ) {
                         printf {$out_fh} ">%s\n",
                             App::Fasops::encode_header( $info_of->{$name} );
                         printf {$out_fh} "%s\n", $info_of->{$name}{seq};
