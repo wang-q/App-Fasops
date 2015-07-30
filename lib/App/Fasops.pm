@@ -325,7 +325,6 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     my @names = @{ App::Fasops::read_names( $args->[1] ) };
-    my %seen = map { $_ => 1 } @names;
 
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     my $out_fh;
@@ -353,8 +352,8 @@ sub execute {
                     $keep = ( keys %{$info_of} )[0];
                 }
 
-                for my $name ( keys %{$info_of} ) {
-                    if ( $seen{$name} or $name eq $keep ) {
+                for my $name (@names) {
+                    if ( exists( $info_of->{$name} ) or ( $name eq $keep ) ) {
                         printf {$out_fh} ">%s\n",
                             App::Fasops::encode_header( $info_of->{$name} );
                         printf {$out_fh} "%s\n", $info_of->{$name}{seq};
