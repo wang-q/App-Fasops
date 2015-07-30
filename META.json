@@ -1,0 +1,69 @@
+{
+   "abstract" : "operating blocked fasta files",
+   "author" : [
+      "Qiang Wang <wang-q@outlook.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 5.037, Dist::Milla version v1.0.15, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "App-Fasops",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "inc",
+         "share",
+         "eg",
+         "examples"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Dist::Milla" : "v1.0.15",
+            "Test::Pod" : "1.41"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "App::Cmd" : "0",
+            "IO::Zlib" : "0",
+            "List::MoreUtils" : "0",
+            "Path::Tiny" : "0",
+            "Tie::IxHash" : "0",
+            "YAML::Syck" : "0",
+            "perl" : "5.008001"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : "0.88"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/wang-q/App-Fasops/issues"
+      },
+      "homepage" : "https://github.com/wang-q/App-Fasops",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/wang-q/App-Fasops.git",
+         "web" : "https://github.com/wang-q/App-Fasops"
+      }
+   },
+   "version" : "0.2.0"
+}
+
