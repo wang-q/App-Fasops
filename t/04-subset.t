@@ -1,4 +1,4 @@
-use Test::More tests => 3;
+use Test::More tests => 6;
 use App::Cmd::Tester;
 
 use App::Fasops;
