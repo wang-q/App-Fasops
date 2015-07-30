@@ -1,2 +1,7 @@
 {{$NEXT}}
-    - Change log entry for the next version
+
+0.2.0  2015-07-31 02:49:59 CST
+    - Convert to Dist::Milla
+
+0.1.0  2015-04-13 00:00:00 CST
+    - Now useful
