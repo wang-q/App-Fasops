@@ -18,3 +18,7 @@ For help with App::Fasops, run "fasops help"
 __END__
 
 perl -I lib/ bin/fasops
+
+perl -I lib/ bin/fasops names example.fas -c -o stdout
+
+perl -I lib/ bin/fasops subset example.fas example.name.list
