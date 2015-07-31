@@ -13,7 +13,9 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => 0
   },
   "DISTNAME" => "App-Fasops",
-  "EXE_FILES" => [],
+  "EXE_FILES" => [
+    "script/fasops"
+  ],
   "LICENSE" => "perl",
   "MIN_PERL_VERSION" => "5.008001",
   "NAME" => "App::Fasops",
