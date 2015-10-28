@@ -14,3 +14,13 @@ App::Fasops - operating blocked fasta files
         subset: extract a subset of names from a blocked fasta
 
 See `fasops commands` for usage information.
+
+# LICENSE
+
+Copyright 2014- Qiang Wang
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+# AUTHOR
+
+Qiang Wang

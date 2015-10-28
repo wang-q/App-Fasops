@@ -11,10 +11,10 @@ For help with App::Fasops, run "fasops help"
 
 __END__
 
-perl -I lib/ bin/fasops
+perl -I lib/ script/fasops
 
-perl -I lib/ bin/fasops names t/example.fas -c -o stdout
+perl -I lib/ script/fasops names t/example.fas -c -o stdout
 
-perl -I lib/ bin/fasops subset t/example.fas t/example.name.list -o stdout
+perl -I lib/ script/fasops subset t/example.fas t/example.name.list -o stdout
 
 perl -I lib/ t/04-subset.t

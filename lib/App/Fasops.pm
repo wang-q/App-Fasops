@@ -5,7 +5,7 @@ use autodie;
 
 use 5.008001;
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.2.1';
 
 use App::Cmd::Setup -app;
 use Carp;
@@ -190,5 +190,17 @@ App::Fasops - operating blocked fasta files
       subset: extract a subset of names from a blocked fasta
 
 See C<fasops commands> for usage information.
+
+=cut
+
+=head1 LICENSE
+
+Copyright 2014- Qiang Wang
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Qiang Wang
 
 =cut
