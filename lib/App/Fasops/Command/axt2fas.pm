@@ -74,9 +74,11 @@ sub execute {
             if ( !$in_fh->eof ) {
                 $line = $in_fh->getline;
             }
-            next if substr( $line, 0, 1 ) eq "#";
 
-            if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+            if ( substr( $line, 0, 1 ) eq "#" ) {
+                next;
+            }
+            elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
                 my $info_of = App::Fasops::parse_axt_block($content);
                 $content = '';
 

@@ -6,11 +6,8 @@ use constant abstract => 'convert maf to blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "output filename" ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
     );
 }
 
@@ -23,18 +20,20 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc
-        .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
-    $desc .= "\t<infile> is the path to maf file, .maf.gz is supported\n";
+    $desc .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
+    $desc .= "\t<infiles> are paths to maf files, .maf.gz is supported\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need a input file.") unless @$args;
-    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
-        unless -e $args->[0];
+    $self->usage_error("This command need one or more input files.") unless @{$args};
+    for ( @{$args} ) {
+        if ( !Path::Tiny::path($_)->is_file ) {
+            $self->usage_error("The input file [$_] doesn't exist.");
+        }
+    }
 
     if ( !exists $opt->{outfile} ) {
         $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".fas";
@@ -44,61 +43,53 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
-    open my $out_fh, ">", $opt->{outfile};
-
-    # read and write
-    my $content = '';
-ALN: while ( my $line = <$in_fh> ) {
-        if ( $line =~ /^\s+$/ and $content =~ /\S/ ) {    # meet blank line
-            my @slines = grep {/\S/} split /\n/, $content;
-            $content = '';
-
-            # parse maf
-            my @names;
-            my $info_of = {};
-            for my $sline (@slines) {
-                my ( $s, $src, $start, $size, $strand, $srcsize, $text )
-                    = split /\s+/, $sline;
-
-                my ( $species, $chr_name ) = split /\./, $src;
-                $chr_name = $species if !defined $chr_name;
-
-                # adjust coordinates to be one-based inclusive
-                $start = $start + 1;
-
-                push @names, $species;
-                $info_of->{$species} = {
-                    seq        => $text,
-                    name       => $species,
-                    chr_name   => $chr_name,
-                    chr_start  => $start,
-                    chr_end    => $start + $size - 1,
-                    chr_strand => $strand,
-                };
-            }
-
-            # output
-            for my $species (@names) {
-                printf {$out_fh} ">%s\n",
-                    App::Fasops::encode_header( $info_of->{$species} );
-                printf {$out_fh} "%s\n", $info_of->{$species}{seq};
-            }
-            print {$out_fh} "\n";
-        }
-        elsif ( $line =~ /^#/ ) {    # comments
-            next;
-        }
-        elsif ( $line =~ /^s\s/ ) {    # s line, contain info and seq
-            $content .= $line;
-        }
-        else {                         # a, i, e, q lines
-                # just ommit it
-                # see http://genome.ucsc.edu/FAQ/FAQformat.html#format5
-        }
+    my $out_fh;
+    if ( lc( $opt->{outfile} ) eq "stdout" ) {
+        $out_fh = *STDOUT;
+    }
+    else {
+        open $out_fh, ">", $opt->{outfile};
     }
 
-    $in_fh->close;
+    for my $infile ( @{$args} ) {
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
+
+        my $content = '';    # content of one block
+        while (1) {
+            last if $in_fh->eof and $content eq '';
+            my $line = '';
+            if ( !$in_fh->eof ) {
+                $line = $in_fh->getline;
+            }
+
+            if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+                my $info_of = App::Fasops::parse_maf_block($content);
+                $content = '';
+
+                my @names = keys %{$info_of};
+                next if length $info_of->{ $names[0] }{seq} < $opt->{length};
+
+                for my $key (@names) {
+                    my $info = $info_of->{$key};
+                    printf {$out_fh} ">%s\n", App::Fasops::encode_header($info);
+                    printf {$out_fh} "%s\n",  $info->{seq};
+                }
+                print {$out_fh} "\n";
+            }
+            elsif ( substr( $line, 0, 2 ) eq "s " ) {    # s line, contain info and seq
+                $content .= $line;
+            }
+            else {
+                # omit # lines
+                # omit a, i, e, q lines
+                # see http://genome.ucsc.edu/FAQ/FAQformat.html#format5
+                next;
+            }
+        }
+
+        $in_fh->close;
+    }
+
     close $out_fh;
 }
 

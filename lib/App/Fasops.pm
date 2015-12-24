@@ -128,7 +128,7 @@ sub parse_block {
     my $block = shift;
 
     my @lines = grep {/\S/} split /\n/, $block;
-    croak "Numbers of headers not equal to seqs\n" if @lines % 2;
+    Carp::croak "Numbers of headers not equal to seqs\n" if @lines % 2;
 
     tie my %info_of, "Tie::IxHash";
     while (@lines) {
@@ -151,7 +151,7 @@ sub parse_axt_block {
     my $block = shift;
 
     my @lines = grep {/\S/} split /\n/, $block;
-    croak "A block of axt should contains three lines\n" if @lines != 3;
+    Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
 
     my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
         $second_start, $second_end, $query_strand, $align_score,
@@ -175,6 +175,36 @@ sub parse_axt_block {
             seq        => $lines[2],
         },
     );
+
+    return \%info_of;
+}
+
+sub parse_maf_block {
+    my $block = shift;
+
+    my @lines = grep {/\S/} split /\n/, $block;
+    Carp::croak "A block of maf should contain s lines\n" unless @lines > 0;
+
+    tie my %info_of, "Tie::IxHash";
+
+    for my $sline (@lines) {
+        my ( $s, $src, $start, $size, $strand, $srcsize, $text ) = split /\s+/, $sline;
+
+        my ( $species, $chr_name ) = split /\./, $src;
+        $chr_name = $species if !defined $chr_name;
+
+        # adjust coordinates to be one-based inclusive
+        $start = $start + 1;
+
+        $info_of{$species} = {
+            name       => $species,
+            chr_name   => $chr_name,
+            chr_start  => $start,
+            chr_end    => $start + $size - 1,
+            chr_strand => $strand,
+            seq        => $text,
+        };
+    }
 
     return \%info_of;
 }

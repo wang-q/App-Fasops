@@ -24,3 +24,4 @@ perl -I lib/ script/fasops separate t/example.fas --nodash --rc
 perl -I lib/ script/fasops covers t/example.fas -o stdout -n S288c
 
 perl -I lib/ script/fasops axt2fas t/example.axt -o stdout
+perl -I lib/ script/fasops maf2fas t/example.maf -o stdout
