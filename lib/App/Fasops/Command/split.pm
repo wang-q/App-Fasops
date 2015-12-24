@@ -2,8 +2,7 @@ package App::Fasops::Command::split;
 
 use App::Fasops -command;
 
-use constant abstract =>
-    'split a blocked fasta file to separate per-alignment files';
+use constant abstract => 'split blocked fasta files to separate per-alignment files';
 
 sub opt_spec {
     return (
@@ -15,24 +14,26 @@ sub opt_spec {
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infile>";
+    $desc .= " <infiles>";
     return $desc;
 }
 
 sub description {
     my $desc;
-    $desc .= "Split a blocked fasta file to separate per-alignment files.\n";
-    $desc
-        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "Split blocked fasta files to separate per-alignment files.\n";
+    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need a input file.") unless @$args;
-    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
-        unless -e $args->[0];
+    $self->usage_error("This command need one or more input files.") unless @{$args};
+    for ( @{$args} ) {
+        if ( !Path::Tiny::path($_)->is_file ) {
+            $self->usage_error("The input file [$_] doesn't exist.");
+        }
+    }
 
     if ( !exists $opt->{outdir} ) {
         $opt->{outdir} = Path::Tiny::path( $args->[0] )->absolute . ".split";
@@ -54,9 +55,9 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    for my $infile ( @{$args} ) {
+        my $in_fh = IO::Zlib->new( $args->[0], "rb" );
 
-    {
         my $content = '';    # content of one block
         while (1) {
             last if $in_fh->eof and $content eq '';
@@ -68,8 +69,8 @@ sub execute {
                 my $info_of = App::Fasops::parse_block($content);
                 $content = '';
 
-                my $target = ( keys %{$info_of} )[0];
-                my $filename = App::Fasops::encode_header($info_of->{$target});
+                my $target   = ( keys %{$info_of} )[0];
+                my $filename = App::Fasops::encode_header( $info_of->{$target} );
                 $filename =~ s/\|.+//;    # remove addtional fields
                 $filename =~ s/[\(\)\:]+/./g;
                 $filename .= '.fas';
@@ -86,9 +87,9 @@ sub execute {
                 $content .= $line;
             }
         }
-    }
 
-    $in_fh->close;
+        $in_fh->close;
+    }
 }
 
 1;
