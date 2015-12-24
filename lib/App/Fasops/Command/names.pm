@@ -2,7 +2,7 @@ package App::Fasops::Command::names;
 
 use App::Fasops -command;
 
-use constant abstract => 'scan a blocked fasta file and output all names';
+use constant abstract => 'scan blocked fasta files and output all species names';
 
 sub opt_spec {
     return (
@@ -14,24 +14,26 @@ sub opt_spec {
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infile>";
+    $desc .= " <infiles>";
     return $desc;
 }
 
 sub description {
     my $desc;
-    $desc .= "Scan a blocked fasta file and output all names used in it.\n";
-    $desc
-        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "Scan blocked fasta files and output all species.\n";
+    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need a input file.") unless @$args;
-    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
-        unless -e $args->[0];
+    $self->usage_error("This command need one or more input files.") unless @{$args};
+    for ( @{$args} ) {
+        if ( !Path::Tiny::path($_)->is_file ) {
+            $self->usage_error("The input file [$_] doesn't exist.");
+        }
+    }
 
     if ( !exists $opt->{outfile} ) {
         $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".list";
@@ -41,10 +43,10 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
-
     tie my %count_of, "Tie::IxHash";
-    {
+    for my $infile ( @{$args} ) {
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
+
         my $content = '';    # content of one block
         while (1) {
             last if $in_fh->eof and $content eq '';
@@ -65,8 +67,9 @@ sub execute {
                 $content .= $line;
             }
         }
+
+        $in_fh->close;
     }
-    $in_fh->close;
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
@@ -81,7 +84,6 @@ sub execute {
         print {$out_fh} "\n";
     }
     close $out_fh;
-
 }
 
 1;

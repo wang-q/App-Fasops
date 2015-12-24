@@ -20,7 +20,7 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc .= "scan blocked fasta files and output covers on chromosomes.\n";
+    $desc .= "Scan blocked fasta files and output covers on chromosomes.\n";
     $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
@@ -43,9 +43,9 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my %count_of;
+    my %count_of; # YAML::Sync can't Dump tied hashes
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
 
         my $content = '';    # content of one block
         while (1) {
