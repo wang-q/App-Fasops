@@ -17,5 +17,6 @@ blib
 *.fas
 *.fasta
 *.list
+*.yml
 
 .komodotools

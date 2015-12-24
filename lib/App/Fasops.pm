@@ -5,11 +5,12 @@ use autodie;
 
 use 5.008001;
 
-our $VERSION = '0.2.2';
+our $VERSION = '0.2.3';
 
 use App::Cmd::Setup -app;
 use Carp;
-use File::Basename;
+
+use AlignDB::IntSpan;
 use List::MoreUtils;
 use IO::Zlib;
 use Path::Tiny;

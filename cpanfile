@@ -1,4 +1,5 @@
 requires 'App::Cmd';
+requires 'AlignDB::IntSpan';
 requires 'List::MoreUtils';
 requires 'IO::Zlib';
 requires 'Path::Tiny';
