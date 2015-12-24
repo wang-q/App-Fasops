@@ -20,7 +20,7 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc .= "Scan blocked fasta files and output all species.\n";
+    $desc .= ucfirst(abstract) . ".\n";
     $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }

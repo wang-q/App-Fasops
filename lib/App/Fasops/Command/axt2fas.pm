@@ -7,18 +7,9 @@ use constant abstract => 'convert axt to blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "output filename" ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
-        [   "tname|t=s",
-            "target name, default is [target]",
-            { default => "target" }
-        ],
-        [   "qname|q=s",
-            "query name, default is [query]",
-            { default => "query" }
-        ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
+        [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
     );
 }
 
@@ -31,8 +22,7 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc
-        .= "Convert UCSC axt pairwise alignment file to blocked fasta file.\n";
+    $desc .= "Convert UCSC axt pairwise alignment file to blocked fasta file.\n";
     $desc .= "\t<infile> is the path to axt file, .axt.gz is supported\n";
     return $desc;
 }
@@ -72,9 +62,8 @@ sub execute {
     for my $info_ref ( @{$data} ) {
         for my $i ( 0, 1 ) {
             $info_ref->[$i]{name} = $i == 0 ? $opt->{tname} : $opt->{qname};
-            printf {$out_fh} ">%s\n",
-                App::Fasops::encode_header( $info_ref->[$i] );
-            printf {$out_fh} "%s\n", $info_ref->[$i]{seq};
+            printf {$out_fh} ">%s\n", App::Fasops::encode_header( $info_ref->[$i] );
+            printf {$out_fh} "%s\n",  $info_ref->[$i]{seq};
         }
         print {$out_fh} "\n";
     }

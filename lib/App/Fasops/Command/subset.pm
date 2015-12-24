@@ -2,13 +2,12 @@ package App::Fasops::Command::subset;
 
 use App::Fasops -command;
 
-use constant abstract =>
-    'extract a subset of names from a blocked fasta';
+use constant abstract => 'extract a subset of species from a blocked fasta';
 
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "first",       "Always keep the first name." ],
+        [ "first",       "Always keep the first species." ],
     );
 }
 
@@ -21,13 +20,10 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc .= "Extract a blocked fasta that just has a subset of names.\n";
-    $desc
-        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
-    $desc
-        .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
-    $desc
-        .= "\tNames in the output file will following the order in <name.list>.\n";
+    $desc .= ucfirst(abstract) . ".\n";
+    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
+    $desc .= "\tNames in the output file will following the order in <name.list>.\n";
     return $desc;
 }
 
@@ -47,7 +43,7 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     my @names = @{ App::Fasops::read_names( $args->[1] ) };
-    my %seen = map {$_ => 1} @names;
+    my %seen = map { $_ => 1 } @names;
 
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     my $out_fh;
@@ -74,18 +70,17 @@ sub execute {
                 if ( $opt->{first} ) {
                     $keep = ( keys %{$info_of} )[0];
                 }
-                
+
                 my @block_names = @names;
-                if ($opt->{first}) {
-                    my $first = (keys %{$info_of})[0];
-                    @block_names = List::MoreUtils::uniq($first, @block_names);
+                if ( $opt->{first} ) {
+                    my $first = ( keys %{$info_of} )[0];
+                    @block_names = List::MoreUtils::uniq( $first, @block_names );
                 }
 
                 for my $name (@block_names) {
                     if ( exists $info_of->{$name} ) {
-                        printf {$out_fh} ">%s\n",
-                            App::Fasops::encode_header( $info_of->{$name} );
-                        printf {$out_fh} "%s\n", $info_of->{$name}{seq};
+                        printf {$out_fh} ">%s\n", App::Fasops::encode_header( $info_of->{$name} );
+                        printf {$out_fh} "%s\n",  $info_of->{$name}{seq};
                     }
                 }
                 print {$out_fh} "\n";

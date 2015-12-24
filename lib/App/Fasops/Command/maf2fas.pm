@@ -24,7 +24,7 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc
-        .= "Convert UCSC maf multiply alignment file to blocked fasta file.\n";
+        .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
     $desc .= "\t<infile> is the path to maf file, .maf.gz is supported\n";
     return $desc;
 }
