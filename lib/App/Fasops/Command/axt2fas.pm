@@ -6,7 +6,7 @@ use constant abstract => 'convert axt to blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "output filename" ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
         [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
         [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
@@ -23,16 +23,23 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= "Convert UCSC axt pairwise alignment file to blocked fasta file.\n";
-    $desc .= "\t<infile> is the path to axt file, .axt.gz is supported\n";
+    $desc .= "\t<infiles> are paths to axt files, .axt.gz is supported\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need a input file.") unless @$args;
-    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
-        unless -e $args->[0];
+    $self->usage_error("This command need one or more input files.") unless @{$args};
+    for ( @{$args} ) {
+        if ( !Path::Tiny::path($_)->is_file ) {
+            $self->usage_error("The input file [$_] doesn't exist.");
+        }
+    }
+
+    if ( !exists $opt->{outfile} ) {
+        $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".fas";
+    }
 
     if ( $opt->{tname} ) {
         if ( $opt->{tname} !~ /^[\w]+$/ ) {
@@ -44,28 +51,53 @@ sub validate_args {
             $self->usage_error("[--qname] should be an alphanumeric value.");
         }
     }
-
-    if ( !exists $opt->{outfile} ) {
-        $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".fas";
-    }
 }
 
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    open my $out_fh, ">", $opt->{outfile};
+    my $out_fh;
+    if ( lc( $opt->{outfile} ) eq "stdout" ) {
+        $out_fh = *STDOUT;
+    }
+    else {
+        open $out_fh, ">", $opt->{outfile};
+    }
 
-    # read and write
-    my $data = App::Fasops::parse_axt( $args->[0] );
-    @{$data} = grep { $_->[2] >= $opt->{length} } @{$data};
+    for my $infile ( @{$args} ) {
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
 
-    for my $info_ref ( @{$data} ) {
-        for my $i ( 0, 1 ) {
-            $info_ref->[$i]{name} = $i == 0 ? $opt->{tname} : $opt->{qname};
-            printf {$out_fh} ">%s\n", App::Fasops::encode_header( $info_ref->[$i] );
-            printf {$out_fh} "%s\n",  $info_ref->[$i]{seq};
+        my $content = '';    # content of one block
+        while (1) {
+            last if $in_fh->eof and $content eq '';
+            my $line = '';
+            if ( !$in_fh->eof ) {
+                $line = $in_fh->getline;
+            }
+            next if substr( $line, 0, 1 ) eq "#";
+
+            if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
+                my $info_of = App::Fasops::parse_axt_block($content);
+                $content = '';
+
+                next if length $info_of->{target}{seq} < $opt->{length};
+
+                $info_of->{target}{name} = $opt->{tname};
+                $info_of->{query}{name}  = $opt->{qname};
+
+                for my $key (qw{target query}) {
+                    my $info = $info_of->{$key};
+                    printf {$out_fh} ">%s\n", App::Fasops::encode_header($info);
+                    printf {$out_fh} "%s\n",  $info->{seq};
+                }
+                print {$out_fh} "\n";
+            }
+            else {
+                $content .= $line;
+            }
         }
-        print {$out_fh} "\n";
+
+        $in_fh->close;
     }
 
     close $out_fh;

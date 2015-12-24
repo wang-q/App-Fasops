@@ -109,8 +109,7 @@ sub encode_header {
     $header .= "-" . $info->{chr_end};
 
     # additional keys
-    my %essential = map { $_ => 1 }
-        qw{name chr_name chr_strand chr_start chr_end seq full_seq};
+    my %essential = map { $_ => 1 } qw{name chr_name chr_strand chr_start chr_end seq full_seq};
     my @parts;
     for my $key ( sort keys %{$info} ) {
         if ( !$essential{$key} ) {
@@ -148,6 +147,38 @@ sub parse_block {
     return \%info_of;
 }
 
+sub parse_axt_block {
+    my $block = shift;
+
+    my @lines = grep {/\S/} split /\n/, $block;
+    croak "A block of axt should contains three lines\n" if @lines != 3;
+
+    my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
+        $second_start, $second_end, $query_strand, $align_score,
+    ) = split /\s+/, $lines[0];
+
+    my %info_of = (
+        target => {
+            name       => "target",
+            chr_name   => $first_chr,
+            chr_start  => $first_start,
+            chr_end    => $first_end,
+            chr_strand => "+",
+            seq        => $lines[1],
+        },
+        query => {
+            name       => "query",
+            chr_name   => $second_chr,
+            chr_start  => $second_start,
+            chr_end    => $second_end,
+            chr_strand => $query_strand,
+            seq        => $lines[2],
+        },
+    );
+
+    return \%info_of;
+}
+
 sub read_sizes {
     my $file       = shift;
     my $remove_chr = shift;
@@ -169,51 +200,6 @@ sub read_names {
     my @lines = path($file)->lines( { chomp => 1 } );
 
     return \@lines;
-}
-
-sub parse_axt {
-    my $file = shift;
-
-    my $in_fh = IO::Zlib->new( $file, "rb" );
-
-    my @data;
-    while (1) {
-        my $summary_line = <$in_fh>;
-        last unless $summary_line;
-        next if $summary_line =~ /^#/;
-
-        chomp $summary_line;
-        chomp( my $first_line  = <$in_fh> );
-        chomp( my $second_line = <$in_fh> );
-        my $dummy = <$in_fh>;    # blank line
-
-        my ($align_serial, $first_chr,    $first_start,
-            $first_end,    $second_chr,   $second_start,
-            $second_end,   $query_strand, $align_score,
-        ) = split /\s+/, $summary_line;
-
-        my $info_refs = [
-            {   chr_name   => $first_chr,
-                chr_start  => $first_start,
-                chr_end    => $first_end,
-                chr_strand => '+',
-                seq        => $first_line,
-            },
-            {   chr_name   => $second_chr,
-                chr_start  => $second_start,
-                chr_end    => $second_end,
-                chr_strand => $query_strand,
-                seq        => $second_line,
-            },
-            length $first_line,
-        ];
-
-        push @data, $info_refs;
-    }
-
-    $in_fh->close;
-
-    return \@data;
 }
 
 sub revcom {

@@ -43,7 +43,7 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my %count_of; # YAML::Sync can't Dump tied hashes
+    my %count_of;    # YAML::Sync can't Dump tied hashes
     for my $infile ( @{$args} ) {
         my $in_fh = IO::Zlib->new( $infile, "rb" );
 
@@ -54,6 +54,8 @@ sub execute {
             if ( !$in_fh->eof ) {
                 $line = $in_fh->getline;
             }
+            next if substr( $line, 0, 1 ) eq "#";
+
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
                 my $info_of = App::Fasops::parse_block($content);
                 $content = '';
