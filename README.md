@@ -8,10 +8,11 @@ App::Fasops - operating blocked fasta files
           help: display a command's help screen
     
        axt2fas: convert axt to blocked fasta
+        covers: scan blocked fasta files and output covers on chromosomes
        maf2fas: convert maf to blocked fasta
-         names: scan a blocked fasta file and output all names
+         names: scan blocked fasta files and output all species names
       separate: separate blocked fasta files by species
-         split: split a blocked fasta file to separate per-alignment files
+         split: split blocked fasta files to separate per-alignment files
         subset: extract a subset of names from a blocked fasta
 
 See `fasops commands` for usage information.
