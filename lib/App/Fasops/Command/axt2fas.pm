@@ -66,7 +66,7 @@ sub execute {
     open my $out_fh, ">", $opt->{outfile};
 
     # read and write
-    my $data = parse_axt( $args->[0] );
+    my $data = App::Fasops::parse_axt( $args->[0] );
     @{$data} = grep { $_->[2] >= $opt->{length} } @{$data};
 
     for my $info_ref ( @{$data} ) {
@@ -80,51 +80,6 @@ sub execute {
     }
 
     close $out_fh;
-}
-
-sub parse_axt {
-    my $file = shift;
-
-    my $in_fh = IO::Zlib->new( $file, "rb" );
-
-    my @data;
-    while (1) {
-        my $summary_line = <$in_fh>;
-        last unless $summary_line;
-        next if $summary_line =~ /^#/;
-
-        chomp $summary_line;
-        chomp( my $first_line  = <$in_fh> );
-        chomp( my $second_line = <$in_fh> );
-        my $dummy = <$in_fh>;    # blank line
-
-        my ($align_serial, $first_chr,    $first_start,
-            $first_end,    $second_chr,   $second_start,
-            $second_end,   $query_strand, $align_score,
-        ) = split /\s+/, $summary_line;
-
-        my $info_refs = [
-            {   chr_name   => $first_chr,
-                chr_start  => $first_start,
-                chr_end    => $first_end,
-                chr_strand => '+',
-                seq        => $first_line,
-            },
-            {   chr_name   => $second_chr,
-                chr_start  => $second_start,
-                chr_end    => $second_end,
-                chr_strand => $query_strand,
-                seq        => $second_line,
-            },
-            length $first_line,
-        ];
-
-        push @data, $info_refs;
-    }
-
-    $in_fh->close;
-
-    return \@data;
 }
 
 1;

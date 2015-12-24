@@ -18,3 +18,5 @@ perl -I lib/ script/fasops names t/example.fas -c -o stdout
 perl -I lib/ script/fasops subset t/example.fas t/example.name.list -o stdout
 
 perl -I lib/ t/04-subset.t
+
+perl -I lib/ script/fasops separate t/example.fas --nodash --rc

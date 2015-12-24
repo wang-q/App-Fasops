@@ -3,7 +3,7 @@ package App::Fasops::Command::split;
 use App::Fasops -command;
 
 use constant abstract =>
-    'split a blocked fasta file to seperate per-alignment files';
+    'split a blocked fasta file to separate per-alignment files';
 
 sub opt_spec {
     return (
@@ -21,7 +21,7 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc .= "Split a blocked fasta file to seperate per-alignment files.\n";
+    $desc .= "Split a blocked fasta file to separate per-alignment files.\n";
     $desc
         .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
     return $desc;
@@ -48,7 +48,7 @@ sub validate_args {
         }
     }
 
-    mkdir $opt->{outdir}, 0777;
+    Path::Tiny::path( $opt->{outdir} )->mkpath;
 }
 
 sub execute {
@@ -68,7 +68,8 @@ sub execute {
                 my $info_of = App::Fasops::parse_block($content);
                 $content = '';
 
-                my $filename = ( keys %{$info_of} )[0];
+                my $target = ( keys %{$info_of} )[0];
+                my $filename = App::Fasops::encode_header($info_of->{$target});
                 $filename =~ s/\|.+//;    # remove addtional fields
                 $filename =~ s/[\(\)\:]+/./g;
                 $filename .= '.fas';

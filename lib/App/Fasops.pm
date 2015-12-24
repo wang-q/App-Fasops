@@ -5,7 +5,7 @@ use autodie;
 
 use 5.008001;
 
-our $VERSION = '0.2.1';
+our $VERSION = '0.2.2';
 
 use App::Cmd::Setup -app;
 use Carp;
@@ -128,7 +128,7 @@ sub parse_block {
     my $block = shift;
 
     my @lines = grep {/\S/} split /\n/, $block;
-    croak "headers not equal to seqs\n" if @lines % 2;
+    croak "Numbers of headers not equal to seqs\n" if @lines % 2;
 
     tie my %info_of, "Tie::IxHash";
     while (@lines) {
@@ -170,6 +170,60 @@ sub read_names {
     return \@lines;
 }
 
+sub parse_axt {
+    my $file = shift;
+
+    my $in_fh = IO::Zlib->new( $file, "rb" );
+
+    my @data;
+    while (1) {
+        my $summary_line = <$in_fh>;
+        last unless $summary_line;
+        next if $summary_line =~ /^#/;
+
+        chomp $summary_line;
+        chomp( my $first_line  = <$in_fh> );
+        chomp( my $second_line = <$in_fh> );
+        my $dummy = <$in_fh>;    # blank line
+
+        my ($align_serial, $first_chr,    $first_start,
+            $first_end,    $second_chr,   $second_start,
+            $second_end,   $query_strand, $align_score,
+        ) = split /\s+/, $summary_line;
+
+        my $info_refs = [
+            {   chr_name   => $first_chr,
+                chr_start  => $first_start,
+                chr_end    => $first_end,
+                chr_strand => '+',
+                seq        => $first_line,
+            },
+            {   chr_name   => $second_chr,
+                chr_start  => $second_start,
+                chr_end    => $second_end,
+                chr_strand => $query_strand,
+                seq        => $second_line,
+            },
+            length $first_line,
+        ];
+
+        push @data, $info_refs;
+    }
+
+    $in_fh->close;
+
+    return \@data;
+}
+
+sub revcom {
+    my $seq = shift;
+
+    $seq =~ tr/ACGTMRWSYKVHDBNacgtmrwsykvhdbn-/TGCAKYWSRMBDHVNtgcakyswrmbdhvn-/;
+    my $seq_rc = reverse $seq;
+
+    return $seq_rc;
+}
+
 1;
 
 __END__
@@ -186,7 +240,8 @@ App::Fasops - operating blocked fasta files
      axt2fas: convert axt to blocked fasta
      maf2fas: convert maf to blocked fasta
        names: scan a blocked fasta file and output all names
-       split: split a blocked fasta file to seperate per-alignment files
+    separate: separate blocked fasta files by species
+       split: split a blocked fasta file to separate per-alignment files
       subset: extract a subset of names from a blocked fasta
 
 See C<fasops commands> for usage information.
