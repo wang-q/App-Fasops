@@ -6,11 +6,12 @@ use constant abstract => 'separate blocked fasta files by species';
 
 sub opt_spec {
     return (
-        [ "outdir|o=s", "output location, default is [.]",                { default => '.' } ],
-        [ "ext|e=s",    "extensions of output files, default is [fasta]", { default => 'fasta' } ],
-        [ "rm|r",       "if outdir exists, remove it before operating" ],
-        [ "rc",         "Revcom sequences when chr_strand is '-'" ],
-        [ "nodash",     "Remove dashes ('-') from sequences" ],
+        [   "outdir|o=s", "output location, [stdout] for screen, default is [.]", { default => '.' }
+        ],
+        [ "ext|e=s", "extensions of output files, default is [fasta]", { default => 'fasta' } ],
+        [ "rm|r",    "if outdir exists, remove it before operating" ],
+        [ "rc",      "Revcom sequences when chr_strand is '-'" ],
+        [ "nodash",  "Remove dashes ('-') from sequences" ],
     );
 }
 
@@ -47,7 +48,9 @@ sub validate_args {
         }
     }
 
-    Path::Tiny::path( $opt->{outdir} )->mkpath;
+    if ( lc( $opt->{outdir} ) ne "stdout" ) {
+        Path::Tiny::path( $opt->{outdir} )->mkpath;
+    }
 }
 
 sub execute {
@@ -77,10 +80,16 @@ sub execute {
                         $info->{chr_strand} = "+";
                     }
 
-                    my $outfile
-                        = Path::Tiny::path( $opt->{outdir}, $info->{name} . '.' . $opt->{ext} );
-                    $outfile->append( ">" . App::Fasops::encode_header($info) . "\n" );
-                    $outfile->append( $info->{seq} . "\n" );
+                    if ( lc( $opt->{outdir} ) eq "stdout" ) {
+                        print ">" . App::Fasops::encode_header($info) . "\n";
+                        print $info->{seq} . "\n";
+                    }
+                    else {
+                        my $outfile
+                            = Path::Tiny::path( $opt->{outdir}, $info->{name} . '.' . $opt->{ext} );
+                        $outfile->append( ">" . App::Fasops::encode_header($info) . "\n" );
+                        $outfile->append( $info->{seq} . "\n" );
+                    }
                 }
             }
             else {

@@ -6,7 +6,7 @@ use constant abstract => 'convert axt to blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "outfile|o=s", "Output filename, [stdout] for screen." ],
         [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
         [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
         [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
