@@ -22,43 +22,25 @@ sub decode_header {
 
     # S288C.chrI(+):27070-29557|species=S288C
     my $head_qr = qr{
-                ([\w_]+)?           # name
-                [\.]?               # spacer
-                ((?:chr)?[\w-]+)    # chr name
-                (?:\((.+)\))?       # strand
-                [\:]                # spacer
-                (\d+)               # chr start
-                [\_\-]              # spacer
-                (\d+)               # chr end
-            }xi;
+        (?:(?P<name>[\w_]+)\.)?    
+        (?P<chr_name>[\w-]+)        
+        (?:\((?P<chr_strand>.+)\))? 
+        [\:]                        # spacer
+        (?P<chr_start>\d+)    
+        [\_\-]                      # spacer
+        (?P<chr_end>\d+)        
+    }xi;
 
     tie my %info, "Tie::IxHash";
 
     $header =~ $head_qr;
-    my $name     = $1;
+    my $name = $1;
     my $chr_name = $2;
 
-    if ( defined $name ) {
+    if ( defined $name or defined $chr_name ) {
         %info = (
-            chr_name   => $2,
-            chr_strand => $3,
-            chr_start  => $4,
-            chr_end    => $5,
-        );
-        if ( !defined $info{chr_strand} ) {
-            $info{chr_strand} = '+';
-        }
-        elsif ( $info{chr_strand} eq '1' ) {
-            $info{chr_strand} = '+';
-        }
-        elsif ( $info{chr_strand} eq '-1' ) {
-            $info{chr_strand} = '-';
-        }
-    }
-    elsif ( defined $chr_name ) {
-        $name = $header;
-        %info = (
-            chr_name   => $2,
+            name       => $name,
+            chr_name   => $chr_name,
             chr_strand => $3,
             chr_start  => $4,
             chr_end    => $5,
@@ -76,13 +58,13 @@ sub decode_header {
     else {
         $name = $header;
         %info = (
+            name       => undef,
             chr_name   => 'chrUn',
             chr_strand => '+',
             chr_start  => undef,
             chr_end    => undef,
         );
     }
-    $info{name} = $name;
 
     # additional keys
     if ( $header =~ /\|(.+)/ ) {
