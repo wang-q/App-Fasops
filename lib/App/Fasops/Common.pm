@@ -153,7 +153,7 @@ sub parse_block {
         my $seq = shift @lines;
         chomp $seq;
 
-        my $info_ref = App::Fasops::decode_header($header);
+        my $info_ref = decode_header($header);
         $info_ref->{seq} = $seq;
         $info_of{ $info_ref->{name} } = $info_ref;
     }
