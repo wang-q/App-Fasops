@@ -19,8 +19,8 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
 %EXPORT_TAGS = (
     all => [
         qw{
-            read_sizes read_names decode_header encode_header parse_block parse_axt_block
-            parse_maf_block revcom
+            read_sizes read_names read_replaces decode_header encode_header parse_block
+            parse_block_header parse_axt_block parse_maf_block revcom
             },
     ],
 );
@@ -30,8 +30,8 @@ sub read_sizes {
     my $file       = shift;
     my $remove_chr = shift;
 
+    tie my %length_of, "Tie::IxHash";
     my @lines = path($file)->lines( { chomp => 1 } );
-    my %length_of;
     for (@lines) {
         my ( $key, $value ) = split /\t/;
         $key =~ s/chr0?// if $remove_chr;
@@ -47,6 +47,22 @@ sub read_names {
     my @lines = path($file)->lines( { chomp => 1 } );
 
     return \@lines;
+}
+
+sub read_replaces {
+    my $file = shift;
+
+    tie my %replace, "Tie::IxHash";
+    my @lines = path($file)->lines( { chomp => 1 } );
+    for (@lines) {
+        my @fields = split /\t/;
+        if ( @fields >= 2 ) {
+            my $ori = shift @fields;
+            $replace{$ori} = [@fields];
+        }
+    }
+
+    return \%replace;
 }
 
 sub decode_header {
@@ -159,6 +175,30 @@ sub parse_block {
         my $info_ref = decode_header($header);
         $info_ref->{seq} = $seq;
         $info_of{ $info_ref->{name} } = $info_ref;
+    }
+
+    return \%info_of;
+}
+
+sub parse_block_header {
+    my $block = shift;
+
+    my @lines = grep {/\S/} split /\n/, $block;
+    Carp::croak "Numbers of headers not equal to seqs\n" if @lines % 2;
+
+    tie my %info_of, "Tie::IxHash";
+    while (@lines) {
+        my $header = shift @lines;
+        $header =~ s/^\>//;
+        chomp $header;
+
+        my $seq = shift @lines;
+        chomp $seq;
+
+        my $info_ref   = decode_header($header);
+        my $ess_header = encode_header($info_ref, 1);
+        $info_ref->{seq} = $seq;
+        $info_of{$ess_header} = $info_ref;
     }
 
     return \%info_of;
