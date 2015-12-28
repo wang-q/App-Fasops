@@ -133,9 +133,13 @@ sub encode_header {
     my $only_essential = shift;
 
     my $header;
-    $header .= $info->{name};
-    $header .= "." . $info->{chr_name};
-    $header .= "(" . $info->{chr_strand} . ")";
+    if ( defined $info->{name} ) {
+        $header .= $info->{name} . ".";
+    }
+    $header .= $info->{chr_name};
+    if ( defined $info->{chr_strand} ) {
+        $header .= "(" . $info->{chr_strand} . ")";
+    }
     $header .= ":" . $info->{chr_start};
     $header .= "-" . $info->{chr_end};
 
@@ -174,7 +178,13 @@ sub parse_block {
 
         my $info_ref = decode_header($header);
         $info_ref->{seq} = $seq;
-        $info_of{ $info_ref->{name} } = $info_ref;
+        if ( defined $info_ref->{name} ) {
+            $info_of{ $info_ref->{name} } = $info_ref;
+        }
+        else {
+            my $ess_header = encode_header( $info_ref, 1 );
+            $info_of{$ess_header} = $info_ref;
+        }
     }
 
     return \%info_of;
@@ -195,8 +205,8 @@ sub parse_block_header {
         my $seq = shift @lines;
         chomp $seq;
 
-        my $info_ref   = decode_header($header);
-        my $ess_header = encode_header($info_ref, 1);
+        my $info_ref = decode_header($header);
+        my $ess_header = encode_header( $info_ref, 1 );
         $info_ref->{seq} = $seq;
         $info_of{$ess_header} = $info_ref;
     }
