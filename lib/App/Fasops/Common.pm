@@ -15,7 +15,7 @@ use YAML::Syck;
 
 use base 'Exporter';
 use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
-@ISA = qw(Exporter);
+@ISA         = qw(Exporter);
 %EXPORT_TAGS = (
     all => [
         qw{
@@ -66,7 +66,7 @@ sub decode_header {
     tie my %info, "Tie::IxHash";
 
     $header =~ $head_qr;
-    my $name = $1;
+    my $name     = $1;
     my $chr_name = $2;
 
     if ( defined $name or defined $chr_name ) {
@@ -113,7 +113,8 @@ sub decode_header {
 }
 
 sub encode_header {
-    my $info = shift;
+    my $info           = shift;
+    my $only_essential = shift;
 
     my $header;
     $header .= $info->{name};
@@ -123,16 +124,18 @@ sub encode_header {
     $header .= "-" . $info->{chr_end};
 
     # additional keys
-    my %essential = map { $_ => 1 } qw{name chr_name chr_strand chr_start chr_end seq full_seq};
-    my @parts;
-    for my $key ( sort keys %{$info} ) {
-        if ( !$essential{$key} ) {
-            push @parts, $key . "=" . $info->{$key};
+    if ( !$only_essential ) {
+        my %essential = map { $_ => 1 } qw{name chr_name chr_strand chr_start chr_end seq full_seq};
+        my @parts;
+        for my $key ( sort keys %{$info} ) {
+            if ( !$essential{$key} ) {
+                push @parts, $key . "=" . $info->{$key};
+            }
         }
-    }
-    if (@parts) {
-        my $additional = join ";", @parts;
-        $header .= "|" . $additional;
+        if (@parts) {
+            my $additional = join ";", @parts;
+            $header .= "|" . $additional;
+        }
     }
 
     return $header;
