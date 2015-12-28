@@ -1,3 +1,6 @@
+0.2.6  Mon Dec 28 09:31:35 2015
+    - Change regex in App::Fasops::decode_header()
+
 0.2.5  Sun Dec 27 21:11:13 2015
     - Tests for `fasops separate`
 

@@ -5,7 +5,7 @@ use autodie;
 
 use 5.008001;
 
-our $VERSION = '0.2.5';
+our $VERSION = '0.2.6';
 
 use App::Cmd::Setup -app;
 use Carp;
