@@ -9,10 +9,11 @@ sub opt_spec {
     return (
         [   "outdir|o=s", "output location, [stdout] for screen, default is [.]", { default => '.' }
         ],
-        [ "ext|e=s", "extensions of output files, default is [fasta]", { default => 'fasta' } ],
-        [ "rm|r",    "if outdir exists, remove it before operating" ],
-        [ "rc",      "Revcom sequences when chr_strand is '-'" ],
-        [ "nodash",  "Remove dashes ('-') from sequences" ],
+        [   "suffix|s=s", "extensions of output files, default is [.fasta]", { default => '.fasta' }
+        ],
+        [ "rm|r",   "if outdir exists, remove it before operating" ],
+        [ "rc",     "Revcom sequences when chr_strand is '-'" ],
+        [ "nodash", "Remove dashes ('-') from sequences" ],
     );
 }
 
@@ -87,7 +88,7 @@ sub execute {
                     }
                     else {
                         my $outfile
-                            = Path::Tiny::path( $opt->{outdir}, $info->{name} . '.' . $opt->{ext} );
+                            = Path::Tiny::path( $opt->{outdir}, $info->{name} . $opt->{suffix} );
                         $outfile->append( ">" . encode_header($info) . "\n" );
                         $outfile->append( $info->{seq} . "\n" );
                     }
