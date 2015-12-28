@@ -1,6 +1,7 @@
 package App::Fasops::Command::separate;
 
 use App::Fasops -command;
+use App::Fasops::Common qw(:all);
 
 use constant abstract => 'separate blocked fasta files by species';
 
@@ -67,7 +68,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::parse_block($content);
+                my $info_of = parse_block($content);
                 $content = '';
 
                 for my $key ( keys %{$info_of} ) {
@@ -76,18 +77,18 @@ sub execute {
                         $info->{seq} =~ tr/-//d;
                     }
                     if ( $opt->{rc} and $info->{chr_strand} ne "+" ) {
-                        $info->{seq}        = App::Fasops::revcom( $info->{seq} );
+                        $info->{seq}        = revcom( $info->{seq} );
                         $info->{chr_strand} = "+";
                     }
 
                     if ( lc( $opt->{outdir} ) eq "stdout" ) {
-                        print ">" . App::Fasops::encode_header($info) . "\n";
+                        print ">" . encode_header($info) . "\n";
                         print $info->{seq} . "\n";
                     }
                     else {
                         my $outfile
                             = Path::Tiny::path( $opt->{outdir}, $info->{name} . '.' . $opt->{ext} );
-                        $outfile->append( ">" . App::Fasops::encode_header($info) . "\n" );
+                        $outfile->append( ">" . encode_header($info) . "\n" );
                         $outfile->append( $info->{seq} . "\n" );
                     }
                 }

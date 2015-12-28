@@ -1,6 +1,7 @@
 package App::Fasops::Command::axt2fas;
 
 use App::Fasops -command;
+use App::Fasops::Common qw(:all);
 
 use constant abstract => 'convert axt to blocked fasta';
 
@@ -79,7 +80,7 @@ sub execute {
                 next;
             }
             elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::parse_axt_block($content);
+                my $info_of = parse_axt_block($content);
                 $content = '';
 
                 next if length $info_of->{target}{seq} < $opt->{length};
@@ -89,7 +90,7 @@ sub execute {
 
                 for my $key (qw{target query}) {
                     my $info = $info_of->{$key};
-                    printf {$out_fh} ">%s\n", App::Fasops::encode_header($info);
+                    printf {$out_fh} ">%s\n", encode_header($info);
                     printf {$out_fh} "%s\n",  $info->{seq};
                 }
                 print {$out_fh} "\n";

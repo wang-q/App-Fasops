@@ -1,6 +1,7 @@
 package App::Fasops::Command::subset;
 
 use App::Fasops -command;
+use App::Fasops::Common qw(:all);
 
 use constant abstract => 'extract a subset of species from a blocked fasta';
 
@@ -42,7 +43,7 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my @names = @{ App::Fasops::read_names( $args->[1] ) };
+    my @names = @{ read_names( $args->[1] ) };
     my %seen = map { $_ => 1 } @names;
 
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
@@ -63,7 +64,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::parse_block($content);
+                my $info_of = parse_block($content);
                 $content = '';
 
                 my $keep = '';
@@ -79,7 +80,7 @@ sub execute {
 
                 for my $name (@block_names) {
                     if ( exists $info_of->{$name} ) {
-                        printf {$out_fh} ">%s\n", App::Fasops::encode_header( $info_of->{$name} );
+                        printf {$out_fh} ">%s\n", encode_header( $info_of->{$name} );
                         printf {$out_fh} "%s\n",  $info_of->{$name}{seq};
                     }
                 }
