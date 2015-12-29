@@ -20,7 +20,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
     all => [
         qw{
             read_sizes read_names read_replaces decode_header encode_header parse_block
-            parse_block_header parse_axt_block parse_maf_block revcom
+            parse_block_header parse_axt_block parse_maf_block revcom seq_length
             },
     ],
 );
@@ -283,6 +283,14 @@ sub revcom {
     my $seq_rc = reverse $seq;
 
     return $seq_rc;
+}
+
+sub seq_length {
+    my $seq = shift;
+
+    my $gaps = $seq =~ tr/-/-/;
+
+    return length($seq) - $gaps;
 }
 
 1;

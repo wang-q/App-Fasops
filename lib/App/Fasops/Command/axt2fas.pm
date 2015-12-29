@@ -83,7 +83,8 @@ sub execute {
                 my $info_of = parse_axt_block($content);
                 $content = '';
 
-                next if length $info_of->{target}{seq} < $opt->{length};
+                next if seq_length( $info_of->{target}{seq} ) < $opt->{length};
+                next if seq_length( $info_of->{query}{seq} ) < $opt->{length};
 
                 $info_of->{target}{name} = $opt->{tname};
                 $info_of->{query}{name}  = $opt->{qname};
