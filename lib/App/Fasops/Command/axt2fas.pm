@@ -57,8 +57,8 @@ sub validate_args {
     }
 
     if ( $opt->{size} ) {
-        if ( !Path::Tiny::path( $opt->{qname} )->is_file ) {
-            $self->usage_error("The size file [$opt->{qname}] doesn't exist.");
+        if ( !Path::Tiny::path( $opt->{size} )->is_file ) {
+            $self->usage_error("The size file [$opt->{size}] doesn't exist.");
         }
     }
 }
