@@ -11,6 +11,9 @@ sub opt_spec {
         [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
         [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
         [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
+        [   "size|s=s",
+            "query chr.sizes. Without this file, positions of negtive strand of query will be wrong",
+        ],
     );
 }
 
@@ -52,6 +55,12 @@ sub validate_args {
             $self->usage_error("[--qname] should be an alphanumeric value.");
         }
     }
+
+    if ( $opt->{size} ) {
+        if ( !path( $opt->{qname} )->is_file ) {
+            $self->usage_error("The size file [$opt->{qname}] doesn't exist.");
+        }
+    }
 }
 
 sub execute {
@@ -63,6 +72,11 @@ sub execute {
     }
     else {
         open $out_fh, ">", $opt->{outfile};
+    }
+
+    my $length_of;
+    if ( $opt->{size} ) {
+        $length_of = read_sizes( $opt->{size} );
     }
 
     for my $infile ( @{$args} ) {
@@ -80,7 +94,7 @@ sub execute {
                 next;
             }
             elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_axt_block($content);
+                my $info_of = parse_axt_block( $content, $length_of );
                 $content = '';
 
                 next if seq_length( $info_of->{target}{seq} ) < $opt->{length};

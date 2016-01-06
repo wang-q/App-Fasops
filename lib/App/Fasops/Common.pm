@@ -215,7 +215,8 @@ sub parse_block_header {
 }
 
 sub parse_axt_block {
-    my $block = shift;
+    my $block     = shift;
+    my $length_of = shift;
 
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
@@ -223,6 +224,16 @@ sub parse_axt_block {
     my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
         $second_start, $second_end, $query_strand, $align_score,
     ) = split /\s+/, $lines[0];
+
+    if ( $query_strand eq "-" ) {
+        if ( defined $length_of and ref $length_of eq "HASH" ) {
+            if ( exists $length_of->{$second_chr} ) {
+                $second_start = $length_of->{$second_chr} - $second_start + 1;
+                $second_end   = $length_of->{$second_chr} - $second_end + 1;
+                ( $second_start, $second_end ) = ( $second_end, $second_start );
+            }
+        }
+    }
 
     my %info_of = (
         target => {
