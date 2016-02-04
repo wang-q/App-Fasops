@@ -97,7 +97,7 @@ sub execute {
 
     # IntSpan to runlist
     for my $name ( keys %count_of ) {
-        for my $chr_name ( keys $count_of{$name} ) {
+        for my $chr_name ( keys %{ $count_of{$name} } ) {
             $count_of{$name}->{$chr_name} = $count_of{$name}->{$chr_name}->runlist;
         }
     }
