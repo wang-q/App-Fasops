@@ -20,8 +20,9 @@ sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
-    $desc .= "\t<replace.tsv> is a tab-separated file containing at least two columns.\n";
+    $desc .= "\t<replace.tsv> is a tab-separated file containing more than one fields.\n";
     $desc .= "\t\toriginal_name\treplace_name\tmore_replace_name\n";
+    $desc .= "\t\tWith one field will delete the whole alignment block.\n";
     $desc .= "\t\tWith three or more fields will duplicate the whole alignment block.\n";
     return $desc;
 }

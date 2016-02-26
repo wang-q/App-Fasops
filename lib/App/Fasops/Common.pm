@@ -56,7 +56,7 @@ sub read_replaces {
     my @lines = path($file)->lines( { chomp => 1 } );
     for (@lines) {
         my @fields = split /\t/;
-        if ( @fields >= 2 ) {
+        if ( @fields >= 1 ) {
             my $ori = shift @fields;
             $replace{$ori} = [@fields];
         }
