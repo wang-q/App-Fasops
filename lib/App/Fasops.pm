@@ -1,6 +1,6 @@
 package App::Fasops;
 
-our $VERSION = '0.3.3';
+our $VERSION = '0.3.4';
 
 use App::Cmd::Setup -app;
 
