@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.6  2016-04-08 15:06:47 CST
+    - Require 5.10
+
 0.3.5  2016-04-08 15:01:07 CST
     - Add travis-ci
 
