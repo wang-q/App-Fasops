@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/wang-q/App-Fasops.svg?branch=master)](https://travis-ci.org/wang-q/App-Fasops)
+
 # NAME
 
 App::Fasops - operating blocked fasta files

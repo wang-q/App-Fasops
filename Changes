@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.5  2016-04-08 15:01:07 CST
+    - Add travis-ci
+
 0.3.4  2016-02-27 01:57:33 CST
     - `fasops replace` remove blocks
 
