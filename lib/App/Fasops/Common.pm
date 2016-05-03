@@ -367,7 +367,7 @@ sub align_seqs {
     }
     elsif ( $aln_prog =~ /maff/i ) {
         $aln_prog = 'mafft';
-        for my $e (qw{fftnsi}) {
+        for my $e (qw{mafft}) {
             if ( IPC::Cmd::can_run($e) ) {
                 $bin = $e;
                 last;
@@ -382,9 +382,12 @@ sub align_seqs {
     # temp in and out
     my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX");
     my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX");
+
+    # msa may change the order of sequences
+    my @indexes = 0 .. scalar( @{$seq_refs} - 1 );
     {
         my $fh = $temp_in->openw;
-        for my $i ( 0 .. scalar( @{$seq_refs} - 1 ) ) {
+        for my $i (@indexes) {
             printf {$fh} ">seq_%d\n", $i;
             printf {$fh} "%s\n",      $seq_refs->[$i];
         }
@@ -397,6 +400,17 @@ sub align_seqs {
         push @args, "-infile=" . $temp_in->absolute->stringify;
         push @args, "-outfile=" . $temp_out->absolute->stringify;
     }
+    elsif ( $aln_prog eq "muscle" ) {
+        push @args, "-quiet";
+        push @args, "-in " . $temp_in->absolute->stringify;
+        push @args, "-out " . $temp_out->absolute->stringify;
+    }
+    elsif ( $aln_prog eq "mafft" ) {
+        push @args, "--quiet";
+        push @args, "--auto";
+        push @args, $temp_in->absolute->stringify;
+        push @args, "> " . $temp_out->absolute->stringify;
+    }
 
     my $cmd_line = join " ", ( $bin, @args );
     my $ok = IPC::Cmd::run( command => $cmd_line );
@@ -407,8 +421,8 @@ sub align_seqs {
 
     my @aligned;
     my $seq_of = read_fasta( $temp_out->absolute->stringify );
-    for my $key ( keys %{$seq_of} ) {
-        push @aligned, $seq_of->{$key};
+    for my $i (@indexes) {
+        push @aligned, $seq_of->{ "seq_" . $i };
     }
 
     # delete .dnd files created by clustalw

@@ -11,7 +11,7 @@ use constant abstract => 'realign alignments';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "msa=s",       "Aligning program ([none] means don't do realigning)." ],
+        [ "msa=s", "Aligning program. Default is [clustalw].", { default => "clustalw" } ],
     );
 }
 
@@ -25,6 +25,12 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
+    $desc .= "List of msa:\n";
+    $desc .= " " x 4 . "clustalw\n";
+    $desc .= " " x 4 . "muscle\n";
+    $desc .= " " x 4 . "mafft\n";
+    $desc .= " " x 4 . "none:    means skip realigning\n";
+
     return $desc;
 }
 
@@ -62,17 +68,26 @@ sub execute {
         if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
             my $info_of = parse_block($content);
             $content = '';
-            
-            my @keys = keys %{$info_of};
-            my @seqs;
-            for my $key (@keys) {
-                push @seqs, $info_of->{$key}{seq};
-            }
-            my $refined = align_seqs( \@seqs );
 
-            for my $i ( 0 .. $#keys ) {
-                printf {$out_fh} ">%s\n", encode_header( $info_of->{ $keys[$i] } );
-                printf {$out_fh} "%s\n",  $refined->[$i];
+            if ( $opt->{msa} ne "none" ) {
+                my @keys = keys %{$info_of};
+
+                my @seqs;
+                for my $key (@keys) {
+                    push @seqs, $info_of->{$key}{seq};
+                }
+                my $refined = align_seqs( \@seqs, $opt->{msa} );
+
+                for my $i ( 0 .. $#keys ) {
+                    printf {$out_fh} ">%s\n", encode_header( $info_of->{ $keys[$i] } );
+                    printf {$out_fh} "%s\n",  uc $refined->[$i];
+                }
+            }
+            else {
+                for my $key ( keys %{$info_of} ) {
+                    printf {$out_fh} ">%s\n", encode_header( $info_of->{ $key } );
+                    printf {$out_fh} "%s\n",  $info_of->{$key}{seq};
+                }
             }
 
             print {$out_fh} "\n";
