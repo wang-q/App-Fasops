@@ -8,7 +8,7 @@ use 5.010000;
 use AlignDB::IntSpan;
 use Carp;
 use IO::Zlib;
-use IPC::Cmd qw(can_run);
+use IPC::Cmd;
 use List::MoreUtils;
 use Path::Tiny;
 use Tie::IxHash;
@@ -21,7 +21,7 @@ use vars qw(@ISA @EXPORT_OK %EXPORT_TAGS);
     all => [
         qw{
             read_sizes read_names read_replaces decode_header encode_header parse_block
-            parse_block_header parse_axt_block parse_maf_block revcom seq_length
+            parse_block_header parse_axt_block parse_maf_block revcom seq_length align_seqs
             },
     ],
 );
@@ -107,9 +107,9 @@ sub decode_header {
     else {
         $name = $header;
         %info = (
-            name       => undef,
-            chr_name   => 'chrUn',
-            chr_strand => '+',
+            name       => $name,
+            chr_name   => undef,
+            chr_strand => undef,
             chr_start  => undef,
             chr_end    => undef,
         );
@@ -134,15 +134,17 @@ sub encode_header {
     my $only_essential = shift;
 
     my $header;
-    if ( defined $info->{name} ) {
-        $header .= $info->{name} . ".";
+    $header .= $info->{name};
+    if ( defined $info->{chr_name} ) {
+        $header .= "." . $info->{chr_name};
     }
-    $header .= $info->{chr_name};
     if ( defined $info->{chr_strand} ) {
         $header .= "(" . $info->{chr_strand} . ")";
     }
-    $header .= ":" . $info->{chr_start};
-    $header .= "-" . $info->{chr_end};
+    if ( defined $info->{chr_start} ) {
+        $header .= ":" . $info->{chr_start};
+        $header .= "-" . $info->{chr_end};
+    }
 
     # additional keys
     if ( !$only_essential ) {
@@ -309,11 +311,12 @@ sub indel_intspan {
     my $seq = shift;
 
     my $intspan = AlignDB::IntSpan->new;
+    my $length  = length($seq);
 
     my $offset = 0;
     my $start  = 0;
     my $end    = 0;
-    for my $pos ( 1 .. length($seq) ) {
+    for my $pos ( 1 .. $length ) {
         my $base = substr( $seq, $pos - 1, 1 );
         if ( $base eq '-' ) {
             if ( $offset == 0 ) {
@@ -330,7 +333,7 @@ sub indel_intspan {
         }
     }
     if ( $offset != 0 ) {
-        $end = $seq_legnth;
+        $end = $length;
         $intspan->add_pair( $start, $end );
     }
 
@@ -347,7 +350,7 @@ sub align_seqs {
     if ( !defined $aln_prog or $aln_prog =~ /clus/i ) {
         $aln_prog = 'clustalw';
         for my $e (qw{clustalw clustal-w clustalw2}) {
-            if ( can_run($e) ) {
+            if ( IPC::Cmd::can_run($e) ) {
                 $bin = $e;
                 last;
             }
@@ -356,7 +359,7 @@ sub align_seqs {
     elsif ( $aln_prog =~ /musc/i ) {
         $aln_prog = 'muscle';
         for my $e (qw{muscle}) {
-            if ( can_run($e) ) {
+            if ( IPC::Cmd::can_run($e) ) {
                 $bin = $e;
                 last;
             }
@@ -365,7 +368,7 @@ sub align_seqs {
     elsif ( $aln_prog =~ /maff/i ) {
         $aln_prog = 'mafft';
         for my $e (qw{fftnsi}) {
-            if ( can_run($e) ) {
+            if ( IPC::Cmd::can_run($e) ) {
                 $bin = $e;
                 last;
             }
@@ -377,8 +380,8 @@ sub align_seqs {
     }
 
     # temp in and out
-    my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX.fa");
-    my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX.fa");
+    my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX");
+    my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX");
     {
         my $fh = $temp_in->openw;
         for my $i ( 0 .. scalar( @{$seq_refs} - 1 ) ) {
@@ -396,19 +399,22 @@ sub align_seqs {
     }
 
     my $cmd_line = join " ", ( $bin, @args );
-    system($cmd_line);
+    my $ok = IPC::Cmd::run( command => $cmd_line );
+
+    if ( !$ok ) {
+        Carp::confess("$aln_prog call failed\n");
+    }
 
     my @aligned;
-    for my $line ( $temp_out->lines ) {
-        next if ( $line =~ /^\>/ );
-        chomp $line;
-        push @aligned, $line;
+    my $seq_of = read_fasta( $temp_out->absolute->stringify );
+    for my $key ( keys %{$seq_of} ) {
+        push @aligned, $seq_of->{$key};
     }
 
     # delete .dnd files created by clustalw
+    #printf STDERR "%s\n", $temp_in->absolute->stringify;
     if ( $aln_prog eq "clustalw" ) {
-        my $dnd = $temp_in->absolute->stringify;
-        $dnd =~ s/\.fa/.\dnd/;
+        my $dnd = $temp_in->absolute->stringify . ".dnd";
         path($dnd)->remove;
     }
 
@@ -416,6 +422,32 @@ sub align_seqs {
     undef $temp_out;
 
     return \@aligned;
+}
+
+# read normal fasta files
+sub read_fasta {
+    my $filename = shift;
+
+    tie my %seq_of, "Tie::IxHash";
+    my @lines = path($filename)->lines;
+
+    my $cur_name;
+    for my $line (@lines) {
+        if ( $line =~ /^\>[\w:-]+/ ) {
+            $line =~ s/\>//;
+            chomp $line;
+            $cur_name = $line;
+            $seq_of{$cur_name} = '';
+        }
+        elsif ( $line =~ /^[\w-]+/ ) {
+            chomp $line;
+            $seq_of{$cur_name} .= $line;
+        }
+        else {    # Blank line, do nothing
+        }
+    }
+
+    return \%seq_of;
 }
 
 1;
