@@ -44,7 +44,7 @@
             "Path::Tiny" : "0",
             "Tie::IxHash" : "0",
             "YAML::Syck" : "0",
-            "perl" : "5.010001"
+            "perl" : "5.010000"
          }
       },
       "test" : {
@@ -65,6 +65,6 @@
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
-   "version" : "0.3.6"
+   "version" : "0.3.7"
 }
 

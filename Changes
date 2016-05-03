@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.7  2016-05-04 01:27:07 CST
+    - Add `fasops refine`
+
 0.3.6  2016-04-08 15:06:47 CST
     - Require 5.10
 
