@@ -3,11 +3,12 @@ use strict;
 use warnings;
 use autodie;
 
-use 5.008001;
+use 5.010000;
 
 use AlignDB::IntSpan;
 use Carp;
 use IO::Zlib;
+use IPC::Cmd qw(can_run);
 use List::MoreUtils;
 use Path::Tiny;
 use Tie::IxHash;
@@ -70,13 +71,13 @@ sub decode_header {
 
     # S288C.chrI(+):27070-29557|species=S288C
     my $head_qr = qr{
-        (?:(?P<name>[\w_]+)\.)?    
-        (?P<chr_name>[\w-]+)        
-        (?:\((?P<chr_strand>.+)\))? 
+        (?:(?P<name>[\w_]+)\.)?
+        (?P<chr_name>[\w-]+)
+        (?:\((?P<chr_strand>.+)\))?
         [\:]                        # spacer
-        (?P<chr_start>\d+)    
+        (?P<chr_start>\d+)
         [\_\-]                      # spacer
-        (?P<chr_end>\d+)        
+        (?P<chr_end>\d+)
     }xi;
 
     tie my %info, "Tie::IxHash";
@@ -302,6 +303,119 @@ sub seq_length {
     my $gaps = $seq =~ tr/-/-/;
 
     return length($seq) - $gaps;
+}
+
+sub indel_intspan {
+    my $seq = shift;
+
+    my $intspan = AlignDB::IntSpan->new;
+
+    my $offset = 0;
+    my $start  = 0;
+    my $end    = 0;
+    for my $pos ( 1 .. length($seq) ) {
+        my $base = substr( $seq, $pos - 1, 1 );
+        if ( $base eq '-' ) {
+            if ( $offset == 0 ) {
+                $start = $pos;
+            }
+            $offset++;
+        }
+        else {
+            if ( $offset != 0 ) {
+                $end = $pos - 1;
+                $intspan->add_pair( $start, $end );
+            }
+            $offset = 0;
+        }
+    }
+    if ( $offset != 0 ) {
+        $end = $seq_legnth;
+        $intspan->add_pair( $start, $end );
+    }
+
+    return $intspan;
+}
+
+sub align_seqs {
+    my $seq_refs = shift;
+    my $aln_prog = shift;
+
+    # get executable
+    my $bin;
+
+    if ( !defined $aln_prog or $aln_prog =~ /clus/i ) {
+        $aln_prog = 'clustalw';
+        for my $e (qw{clustalw clustal-w clustalw2}) {
+            if ( can_run($e) ) {
+                $bin = $e;
+                last;
+            }
+        }
+    }
+    elsif ( $aln_prog =~ /musc/i ) {
+        $aln_prog = 'muscle';
+        for my $e (qw{muscle}) {
+            if ( can_run($e) ) {
+                $bin = $e;
+                last;
+            }
+        }
+    }
+    elsif ( $aln_prog =~ /maff/i ) {
+        $aln_prog = 'mafft';
+        for my $e (qw{fftnsi}) {
+            if ( can_run($e) ) {
+                $bin = $e;
+                last;
+            }
+        }
+    }
+
+    if ( !defined $bin ) {
+        confess "Could not find the executable for $aln_prog\n";
+    }
+
+    # temp in and out
+    my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX.fa");
+    my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX.fa");
+    {
+        my $fh = $temp_in->openw;
+        for my $i ( 0 .. scalar( @{$seq_refs} - 1 ) ) {
+            printf {$fh} ">seq_%d\n", $i;
+            printf {$fh} "%s\n",      $seq_refs->[$i];
+        }
+        close $fh;
+    }
+
+    my @args;
+    if ( $aln_prog eq "clustalw" ) {
+        push @args, "-align -type=dna -output=fasta -outorder=input -quiet";
+        push @args, "-infile=" . $temp_in->absolute->stringify;
+        push @args, "-outfile=" . $temp_out->absolute->stringify;
+    }
+
+    my $cmd_line = join " ", ( $bin, @args );
+    system($cmd_line);
+
+    my @aligned;
+    for my $line ( $temp_out->lines ) {
+        next if ( $line =~ /^\>/ );
+        chomp $line;
+        push @aligned, $line;
+    }
+
+    # delete .dnd files created by clustalw
+    if ( $aln_prog eq "clustalw" ) {
+        my $dnd = $temp_in->absolute->stringify;
+        $dnd =~ s/\.fa/.\dnd/;
+        path($dnd)->remove;
+    }
+
+    undef $temp_in;
+    undef $temp_out;
+
+    return \@aligned;
 }
 
 1;
