@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.8  2016-05-05 00:26:00 CST
+    - move 11-refine.t to xt/
+
 0.3.7  2016-05-04 01:27:07 CST
     - Add `fasops refine`
 
