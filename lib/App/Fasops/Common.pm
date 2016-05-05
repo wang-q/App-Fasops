@@ -94,10 +94,7 @@ sub decode_header {
             chr_start  => $4,
             chr_end    => $5,
         );
-        if ( !defined $info{chr_strand} ) {
-            $info{chr_strand} = '+';
-        }
-        elsif ( $info{chr_strand} eq '1' ) {
+        if ( $info{chr_strand} eq '1' ) {
             $info{chr_strand} = '+';
         }
         elsif ( $info{chr_strand} eq '-1' ) {
