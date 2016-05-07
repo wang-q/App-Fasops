@@ -4,6 +4,7 @@ use warnings;
 use autodie;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'realign alignments';
@@ -79,13 +80,13 @@ sub execute {
                 my $refined = align_seqs( \@seqs, $opt->{msa} );
 
                 for my $i ( 0 .. $#keys ) {
-                    printf {$out_fh} ">%s\n", encode_header( $info_of->{ $keys[$i] } );
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
                     printf {$out_fh} "%s\n",  uc $refined->[$i];
                 }
             }
             else {
                 for my $key ( keys %{$info_of} ) {
-                    printf {$out_fh} ">%s\n", encode_header( $info_of->{ $key } );
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $key } );
                     printf {$out_fh} "%s\n",  $info_of->{$key}{seq};
                 }
             }

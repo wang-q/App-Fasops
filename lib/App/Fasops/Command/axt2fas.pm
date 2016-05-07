@@ -1,7 +1,8 @@
 package App::Fasops::Command::axt2fas;
 
 use App::Fasops -command;
-use App::Fasops::Common qw(:all);
+use App::RL::Common;
+use App::Fasops::Common;
 
 use constant abstract => 'convert axt to blocked fasta';
 
@@ -76,7 +77,7 @@ sub execute {
 
     my $length_of;
     if ( $opt->{size} ) {
-        $length_of = read_sizes( $opt->{size} );
+        $length_of = App::RL::Common::read_sizes( $opt->{size} );
     }
 
     for my $infile ( @{$args} ) {
@@ -105,7 +106,7 @@ sub execute {
 
                 for my $key (qw{target query}) {
                     my $info = $info_of->{$key};
-                    printf {$out_fh} ">%s\n", encode_header($info);
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
                     printf {$out_fh} "%s\n",  $info->{seq};
                 }
                 print {$out_fh} "\n";

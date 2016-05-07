@@ -1,6 +1,7 @@
 package App::Fasops::Command::replace;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'replace headers from a blocked fasta';
@@ -76,7 +77,7 @@ sub execute {
 
                 if ( @replace_names == 0 ) {    # block untouched
                     for my $header (@ori_names) {
-                        printf {$out_fh} ">%s\n", encode_header( $info_of->{$header} );
+                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
                         printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
                     }
                     print {$out_fh} "\n";
@@ -90,7 +91,7 @@ sub execute {
                                 printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
                             }
                             else {
-                                printf {$out_fh} ">%s\n", encode_header( $info_of->{$header} );
+                                printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
                                 printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
                             }
                         }
@@ -100,7 +101,7 @@ sub execute {
                 else {
                     Carp::carp "Don't support multiply records in one block. @replace_names\n";
                     for my $header (@ori_names) {
-                        printf {$out_fh} ">%s\n", encode_header( $info_of->{$header} );
+                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
                         printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
                     }
                     print {$out_fh} "\n";

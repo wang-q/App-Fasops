@@ -1,6 +1,7 @@
 package App::Fasops::Command::links;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'scan blocked fasta files and output links between pieces';
@@ -62,8 +63,8 @@ sub execute {
 
                 for ( my $i = 0; $i <= $#names; $i++ ) {
                     for ( my $j = $i + 1; $j <= $#names; $j++ ) {
-                        my $header1 = encode_header( $info_of->{ $names[$i] }, 1 );
-                        my $header2 = encode_header( $info_of->{ $names[$j] }, 1 );
+                        my $header1 = App::RL::Common::encode_header( $info_of->{ $names[$i] }, 1 );
+                        my $header2 = App::RL::Common::encode_header( $info_of->{ $names[$j] }, 1 );
                         push @links, [ $header1, $header2 ];
                     }
                 }

@@ -1,6 +1,7 @@
 package App::Fasops::Command::split;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'split blocked fasta files to separate per-alignment files';
@@ -71,7 +72,7 @@ sub execute {
                 $content = '';
 
                 my $target   = ( keys %{$info_of} )[0];
-                my $filename = encode_header( $info_of->{$target} );
+                my $filename = App::RL::Common::encode_header( $info_of->{$target} );
                 $filename =~ s/\|.+//;    # remove addtional fields
                 $filename =~ s/[\(\)\:]+/./g;
                 $filename .= '.fas';

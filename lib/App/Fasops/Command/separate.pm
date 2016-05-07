@@ -1,6 +1,7 @@
 package App::Fasops::Command::separate;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'separate blocked fasta files by species';
@@ -83,13 +84,13 @@ sub execute {
                     }
 
                     if ( lc( $opt->{outdir} ) eq "stdout" ) {
-                        print ">" . encode_header($info) . "\n";
+                        print ">" . App::RL::Common::encode_header($info) . "\n";
                         print $info->{seq} . "\n";
                     }
                     else {
                         my $outfile
                             = Path::Tiny::path( $opt->{outdir}, $info->{name} . $opt->{suffix} );
-                        $outfile->append( ">" . encode_header($info) . "\n" );
+                        $outfile->append( ">" . App::RL::Common::encode_header($info) . "\n" );
                         $outfile->append( $info->{seq} . "\n" );
                     }
                 }

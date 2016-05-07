@@ -1,6 +1,7 @@
 package App::Fasops::Command::maf2fas;
 
 use App::Fasops -command;
+use App::RL::Common;
 use App::Fasops::Common qw(:all);
 
 use constant abstract => 'convert maf to blocked fasta';
@@ -72,7 +73,7 @@ sub execute {
 
                 for my $key (@names) {
                     my $info = $info_of->{$key};
-                    printf {$out_fh} ">%s\n", encode_header($info);
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
                     printf {$out_fh} "%s\n",  $info->{seq};
                 }
                 print {$out_fh} "\n";
