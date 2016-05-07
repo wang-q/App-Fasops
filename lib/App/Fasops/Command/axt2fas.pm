@@ -1,4 +1,7 @@
 package App::Fasops::Command::axt2fas;
+use strict;
+use warnings;
+use autodie;
 
 use App::Fasops -command;
 use App::RL::Common;
@@ -95,11 +98,11 @@ sub execute {
                 next;
             }
             elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_axt_block( $content, $length_of );
+                my $info_of = App::Fasops::Common::parse_axt_block( $content, $length_of );
                 $content = '';
 
-                next if seq_length( $info_of->{target}{seq} ) < $opt->{length};
-                next if seq_length( $info_of->{query}{seq} ) < $opt->{length};
+                next if App::Fasops::Common::seq_length( $info_of->{target}{seq} ) < $opt->{length};
+                next if App::Fasops::Common::seq_length( $info_of->{query}{seq} ) < $opt->{length};
 
                 $info_of->{target}{name} = $opt->{tname};
                 $info_of->{query}{name}  = $opt->{qname};

@@ -1,4 +1,7 @@
 package App::Fasops::Command::replace;
+use strict;
+use warnings;
+use autodie;
 
 use App::Fasops -command;
 use App::RL::Common;

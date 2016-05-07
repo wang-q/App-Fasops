@@ -1,4 +1,7 @@
 package App::Fasops::Command::subset;
+use strict;
+use warnings;
+use autodie;
 
 use App::Fasops -command;
 use App::RL::Common;
