@@ -2,7 +2,7 @@ package App::Fasops::Command::split;
 
 use App::Fasops -command;
 use App::RL::Common;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'split blocked fasta files to separate per-alignment files';
 

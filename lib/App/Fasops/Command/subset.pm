@@ -65,7 +65,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
                 my $keep = '';

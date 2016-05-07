@@ -1,7 +1,7 @@
 package App::Fasops::Command::covers;
 
 use App::Fasops -command;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'scan blocked fasta files and output covers on chromosomes';
 
@@ -58,7 +58,7 @@ sub execute {
             next if substr( $line, 0, 1 ) eq "#";
 
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
                 my @names = keys %{$info_of};

@@ -1,7 +1,7 @@
 package App::Fasops::Command::names;
 
 use App::Fasops -command;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'scan blocked fasta files and output all species names';
 
@@ -56,7 +56,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
                 for my $key ( keys %{$info_of} ) {

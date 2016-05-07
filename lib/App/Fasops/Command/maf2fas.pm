@@ -2,7 +2,7 @@ package App::Fasops::Command::maf2fas;
 
 use App::Fasops -command;
 use App::RL::Common;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'convert maf to blocked fasta';
 
@@ -65,7 +65,7 @@ sub execute {
             }
 
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_maf_block($content);
+                my $info_of = App::Fasops::Common::parse_maf_block($content);
                 $content = '';
 
                 my @names = keys %{$info_of};

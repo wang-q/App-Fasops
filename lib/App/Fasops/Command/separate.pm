@@ -2,7 +2,7 @@ package App::Fasops::Command::separate;
 
 use App::Fasops -command;
 use App::RL::Common;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'separate blocked fasta files by species';
 
@@ -70,7 +70,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
                 for my $key ( keys %{$info_of} ) {
@@ -79,7 +79,7 @@ sub execute {
                         $info->{seq} =~ tr/-//d;
                     }
                     if ( $opt->{rc} and $info->{chr_strand} ne "+" ) {
-                        $info->{seq}        = revcom( $info->{seq} );
+                        $info->{seq}        = App::Fasops::Common::revcom( $info->{seq} );
                         $info->{chr_strand} = "+";
                     }
 

@@ -2,7 +2,7 @@ package App::Fasops::Command::replace;
 
 use App::Fasops -command;
 use App::RL::Common;
-use App::Fasops::Common qw(:all);
+use App::Fasops::Common;
 
 use constant abstract => 'replace headers from a blocked fasta';
 
@@ -46,7 +46,7 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $replace = read_replaces( $args->[1] );
+    my $replace = App::Fasops::Common::read_replaces( $args->[1] );
 
     #print "$_\n" for keys %{$replace};
 
@@ -68,7 +68,7 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block_header($content);
+                my $info_of = App::Fasops::Common::parse_block_header($content);
                 $content = '';
 
                 my @ori_names = keys %{$info_of};
