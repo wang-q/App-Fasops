@@ -332,4 +332,40 @@ sub read_fasta {
     return \%seq_of;
 }
 
+sub mean {
+    @_ = grep { defined $_ } @_;
+    return 0 unless @_;
+    return $_[0] unless @_ > 1;
+    return List::Util::sum(@_) / scalar(@_);
+}
+
+sub calc_gc_ratio {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+
+    my @ratios;
+    for my $i ( 0 .. $seq_count - 1 ) {
+
+        # Count all four bases
+        my $a_count = $seq_refs->[$i] =~ tr/Aa/Aa/;
+        my $g_count = $seq_refs->[$i] =~ tr/Gg/Gg/;
+        my $c_count = $seq_refs->[$i] =~ tr/Cc/Cc/;
+        my $t_count = $seq_refs->[$i] =~ tr/Tt/Tt/;
+
+        my $four_count = $a_count + $g_count + $c_count + $t_count;
+        my $gc_count   = $g_count + $c_count;
+
+        if ( $four_count == 0 ) {
+            next;
+        }
+        else {
+            my $gc_ratio = $gc_count / $four_count;
+            push @ratios, $gc_ratio;
+        }
+    }
+
+    return mean(@ratios);
+}
+
 1;
