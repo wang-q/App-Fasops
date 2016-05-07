@@ -1,7 +1,7 @@
 use Test::More tests => 9;
 
 BEGIN {
-    use_ok( 'App::Fasops::Common', qw(seq_length revcom) );
+    use_ok( 'App::Fasops::Common' );
 }
 
 {
@@ -15,7 +15,7 @@ BEGIN {
 
     for my $i ( 0 .. @seqs - 1 ) {
         my ( $ori, $expected ) = @{ $seqs[$i] };
-        my $result = seq_length($ori);
+        my $result = App::Fasops::Common::seq_length($ori);
         is( $result, $expected, "seq_length_$i" );
     }
 }
@@ -32,7 +32,7 @@ BEGIN {
 
     for my $i ( 0 .. @seqs - 1 ) {
         my ( $ori, $expected ) = @{ $seqs[$i] };
-        my $result = revcom($ori);
+        my $result = App::Fasops::Common::revcom($ori);
         is( $result, $expected, "revcom_$i" );
     }
 }
