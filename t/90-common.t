@@ -80,4 +80,14 @@ BEGIN {
     }
 }
 
+{
+    print "#read_fasta\n";
+
+    my $result = App::Fasops::Common::read_fasta("t/example.fa");
+    
+    is(scalar keys %{$result}, 4, "seq_count");
+    is(length $result->{(keys %{$result})[0]}, 21, "seq_length");
+    is(length $result->{(keys %{$result})[3]}, 18, "seq_length");
+}
+
 done_testing();

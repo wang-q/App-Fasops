@@ -20,7 +20,7 @@ sub read_replaces {
     my $file = shift;
 
     tie my %replace, "Tie::IxHash";
-    my @lines = path($file)->lines( { chomp => 1 } );
+    my @lines = Path::Tiny::path($file)->lines( { chomp => 1 } );
     for (@lines) {
         my @fields = split /\t/;
         if ( @fields >= 1 ) {
@@ -311,7 +311,7 @@ sub read_fasta {
     my $filename = shift;
 
     tie my %seq_of, "Tie::IxHash";
-    my @lines = path($filename)->lines;
+    my @lines = Path::Tiny::path($filename)->lines;
 
     my $cur_name;
     for my $line (@lines) {
