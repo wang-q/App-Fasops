@@ -2,6 +2,10 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.9  2016-05-07 14:15:37 CST
+    - Export nothing. Remove duplicated functions
+    - Add strict and warnings to every modules
+
 0.3.8  2016-05-05 00:26:00 CST
     - move 11-refine.t to xt/
 
