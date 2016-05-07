@@ -39,6 +39,7 @@
          "requires" : {
             "AlignDB::IntSpan" : "0",
             "App::Cmd" : "0",
+            "App::RL" : "0",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0",
             "Path::Tiny" : "0",
