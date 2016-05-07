@@ -5,15 +5,16 @@ use autodie;
 
 use 5.010000;
 
-use AlignDB::IntSpan;
 use Carp;
 use IO::Zlib;
 use IPC::Cmd;
-use List::MoreUtils;
+use List::Util;
+use List::MoreUtils::PP;
 use Path::Tiny;
 use Tie::IxHash;
 use YAML::Syck;
 
+use AlignDB::IntSpan;
 use App::RL::Common;
 
 sub read_replaces {
@@ -175,6 +176,7 @@ sub seq_length {
     return length($seq) - $gaps;
 }
 
+#@returns AlignDB::IntSpan
 sub indel_intspan {
     my $seq = shift;
 
@@ -366,6 +368,145 @@ sub calc_gc_ratio {
     }
 
     return mean(@ratios);
+}
+
+sub pair_D {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count != 2 ) {
+        Carp::confess "Need two sequences\n";
+    }
+
+    my $legnth = length $seq_refs->[0];
+
+    my ( $comparable_bases, $differences ) = (0) x 2;
+
+    for my $pos ( 1 .. $legnth ) {
+        my $base0 = substr $seq_refs->[0], $pos - 1, 1;
+        my $base1 = substr $seq_refs->[1], $pos - 1, 1;
+
+        if (   $base0 =~ /[atcg]/i
+            && $base1 =~ /[atcg]/i )
+        {
+            $comparable_bases++;
+            if ( $base0 ne $base1 ) {
+                $differences++;
+            }
+        }
+    }
+
+    if ( $comparable_bases == 0 ) {
+        Carp::carp "comparable_bases == 0\n";
+        return 0;
+    }
+    else {
+        return $differences / $comparable_bases;
+    }
+}
+
+# Split D value to D1 (substitutions in first_seq), D2( substitutions in second_seq) and Dcomplex
+# (substitutions can't be referred)
+sub ref_pair_D {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count != 3 ) {
+        Carp::confess "Need three sequences\n";
+    }
+
+    my ( $d1, $d2, $dc ) = (0) x 3;
+    my $length = length $seq_refs->[0];
+
+    return ( $d1, $d2, $dc ) if $length == 0;
+
+    for my $pos ( 1 .. $length ) {
+        my $base0    = substr $seq_refs->[0], $pos - 1, 1;
+        my $base1    = substr $seq_refs->[0], $pos - 1, 1;
+        my $base_ref = substr $seq_refs->[0], $pos - 1, 1;
+        if ( $base0 ne $base1 ) {
+            if (   $base0 =~ /[atcg]/i
+                && $base1 =~ /[atcg]/i
+                && $base_ref =~ /[atcg]/i )
+            {
+                if ( $base1 eq $base_ref ) {
+                    $d1++;
+                }
+                elsif ( $base0 eq $base_ref ) {
+                    $d2++;
+                }
+                else {
+                    $dc++;
+                }
+            }
+            else {
+                $dc++;
+            }
+        }
+    }
+
+    for ( $d1, $d2, $dc ) {
+        $_ /= $length;
+    }
+
+    return ( $d1, $d2, $dc );
+}
+
+sub multi_seq_stat {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count < 2 ) {
+        Carp::confess "Need two or more sequences\n";
+    }
+
+    my $legnth = length $seq_refs->[0];
+
+    # For every positions, search for polymorphism_site
+    my ( $comparable_bases, $identities, $differences, $gaps, $ns, $align_errors, ) = (0) x 6;
+    for my $pos ( 1 .. $legnth ) {
+        my @bases = ();
+        for my $i ( 0 .. $seq_count - 1 ) {
+            my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
+            push @bases, $base;
+        }
+        @bases = List::MoreUtils::PP::uniq(@bases);
+
+        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
+            $comparable_bases++;
+            if ( List::MoreUtils::PP::all { $_ eq $bases[0] } @bases ) {
+                $identities++;
+            }
+            else {
+                $differences++;
+            }
+        }
+        elsif ( List::MoreUtils::PP::any { $_ eq '-' } @bases ) {
+            $gaps++;
+        }
+        else {
+            $ns++;
+        }
+    }
+    if ( $comparable_bases == 0 ) {
+        print YAML::Syck::Dump { seqs => $seq_refs, };
+        Carp::carp "number_of_comparable_bases == 0!!\n";
+        return [ $legnth, $comparable_bases, $identities, $differences, $gaps,
+            $ns, $legnth, undef, ];
+    }
+
+    my @all_Ds;
+    for ( my $i = 0; $i < $seq_count; $i++ ) {
+        for ( my $j = $i + 1; $j < $seq_count; $j++ ) {
+            my $D = pair_D( [ $seq_refs->[$i], $seq_refs->[$j] ] );
+            push @all_Ds, $D;
+        }
+    }
+
+    my $D = mean(@all_Ds);
+
+    return [ $legnth, $comparable_bases, $identities, $differences, $gaps,
+        $ns, $align_errors, $D, ];
 }
 
 1;

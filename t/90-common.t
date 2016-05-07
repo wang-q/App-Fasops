@@ -1,4 +1,5 @@
 use Test::More;
+use Test::Number::Delta within => 1e-2;
 
 BEGIN {
     use_ok('App::Fasops::Common');
@@ -54,9 +55,18 @@ BEGIN {
     for my $i ( 0 .. $#data ) {
         my ( $ori, $expected ) = @{ $data[$i] };
         my $result = App::Fasops::Common::indel_intspan($ori);
-        print "original: $ori\n";
         is( $result->runlist, $expected, "indel_intspan $i" );
     }
+}
+
+{
+    print "#read_fasta\n";
+
+    my $result = App::Fasops::Common::read_fasta("t/example.fa");
+
+    is( scalar keys %{$result}, 4, "seq_count" );
+    is( length $result->{ ( keys %{$result} )[0] }, 21, "seq_length" );
+    is( length $result->{ ( keys %{$result} )[3] }, 18, "seq_length" );
 }
 
 {
@@ -70,24 +80,53 @@ BEGIN {
         [ "TAGggATaaC",      0.4 ],
         [ "GCaN--NN--NNNaC", 0.6 ],
         [ [ "ATAA", "CCGC" ], 0.5 ],
+        [ "AAAATTTTGG",               0.2 ],
+        [ "TTAGCCGCTGAGAAGC",         0.5625 ],
+        [ "GATTATCATCACCCCAGCCACATW", 0.4783 ],
+        [ [qw{ AAAATTTTGG AAAATTTTTG }],                             0.15 ],
+        [ [qw{ TTAGCCGCTGAGAAGC GTAGCCGCTGA-AGGC }],                 0.6146 ],
+        [ [qw{ GATTATCATCACCCCAGCCACATW GATTTT--TCACTCCATTCGCATA }], 0.4209 ],
     );
 
     for my $i ( 0 .. $#data ) {
         my ( $ori, $expected ) = @{ $data[$i] };
         my $result = App::Fasops::Common::calc_gc_ratio( ref $ori eq "ARRAY" ? $ori : [$ori] );
-        print "original: $ori\n";
-        is( $result, $expected, "calc_gc_ratio $i" );
+        Test::Number::Delta::delta_ok( $result, $expected, "calc_gc_ratio $i" );
     }
 }
 
 {
-    print "#read_fasta\n";
+    print "#multi_seq_stat\n";
 
-    my $result = App::Fasops::Common::read_fasta("t/example.fa");
-    
-    is(scalar keys %{$result}, 4, "seq_count");
-    is(length $result->{(keys %{$result})[0]}, 21, "seq_length");
-    is(length $result->{(keys %{$result})[3]}, 18, "seq_length");
+    #$seq_legnth,            $number_of_comparable_bases,
+    #$number_of_identities,  $number_of_differences,
+    #$number_of_gaps,        $number_of_n,
+    #$number_of_align_error, $pi,
+    #$first_seq_gc,          $average_gc,
+    my @data = (
+
+        #AAAATTTTGG
+        #AAAATTTTTG
+        [ [qw{ AAAATTTTGG AAAATTTTTG }], [ 10, 10, 9, 1, 0, 0, 0, 0.1, ], ],
+
+        #TTAGCCGCTGAGAAGC
+        #GTAGCCGCTGA-AGGC
+        [ [qw{ TTAGCCGCTGAGAAGC GTAGCCGCTGA-AGGC }], [ 16, 15, 13, 2, 1, 0, 0, 0.1333, ], ],
+
+        #GATTATCATCACCCCAGCCACATA
+        #GATTTT--TCACTCCATTCGCATA
+        [   [qw{ GATTATCATCACCCCAGCCACATW GATTTT--TCACTCCATTCGCATA }],
+            [ 24, 21, 16, 5, 2, 1, 0, 0.2381, ],
+        ],
+
+    );
+
+    for my $i ( 0 .. $#data ) {
+        my ( $seq_pair_ref, $except_ref ) = @{ $data[$i] };
+
+        my $result_multi_ref = App::Fasops::Common::multi_seq_stat($seq_pair_ref);
+        Test::Number::Delta::delta_ok( $result_multi_ref, $except_ref, "stat $i" );
+    }
 }
 
 done_testing();
