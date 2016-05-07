@@ -1,4 +1,4 @@
-use Test::More tests => 5;
+use Test::More;
 use App::Cmd::Tester;
 
 use App::Fasops;
@@ -24,3 +24,5 @@ my $original = path("t/refine.fas")->slurp;
 $original =~ s/\-//g;
 $original =~ s/\s+//g;
 is( $output, $original, 'same without dashes' );
+
+done_testing(5);

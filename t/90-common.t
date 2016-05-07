@@ -1,7 +1,7 @@
 use Test::More;
 
 BEGIN {
-    use_ok( 'App::Fasops::Common' );
+    use_ok('App::Fasops::Common');
 }
 
 {
@@ -69,11 +69,12 @@ BEGIN {
         [ "CcGc",            1 ],
         [ "TAGggATaaC",      0.4 ],
         [ "GCaN--NN--NNNaC", 0.6 ],
+        [ [ "ATAA", "CCGC" ], 0.5 ],
     );
 
     for my $i ( 0 .. $#data ) {
         my ( $ori, $expected ) = @{ $data[$i] };
-        my $result = App::Fasops::Common::calc_gc_ratio( [$ori] );
+        my $result = App::Fasops::Common::calc_gc_ratio( ref $ori eq "ARRAY" ? $ori : [$ori] );
         print "original: $ori\n";
         is( $result, $expected, "calc_gc_ratio $i" );
     }
