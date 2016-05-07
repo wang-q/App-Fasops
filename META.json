@@ -26,7 +26,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "0"
+            "Module::Build::Tiny" : "0.034"
          }
       },
       "develop" : {
@@ -39,7 +39,7 @@
          "requires" : {
             "AlignDB::IntSpan" : "0",
             "App::Cmd" : "0",
-            "App::RL" : "0",
+            "App::RL" : "v0.2.14",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0",
             "Path::Tiny" : "0",
