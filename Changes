@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.10  2016-05-07 17:30:24 CST
+    - codecov
+
 0.3.9  2016-05-07 14:15:37 CST
     - Export nothing. Remove duplicated functions
     - Add strict and warnings to every modules
