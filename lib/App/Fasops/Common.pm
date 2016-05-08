@@ -107,16 +107,15 @@ sub parse_axt_block {
         }
     }
 
-    my %info_of = (
-        target => {
-            name       => "target",
+    my $info_refs = [
+        {   name       => "target",
             chr_name   => $first_chr,
             chr_start  => $first_start,
             chr_end    => $first_end,
             chr_strand => "+",
             seq        => $lines[1],
         },
-        query => {
+        {
             name       => "query",
             chr_name   => $second_chr,
             chr_start  => $second_start,
@@ -124,9 +123,9 @@ sub parse_axt_block {
             chr_strand => $query_strand,
             seq        => $lines[2],
         },
-    );
+    ];
 
-    return \%info_of;
+    return $info_refs;
 }
 
 sub parse_maf_block {

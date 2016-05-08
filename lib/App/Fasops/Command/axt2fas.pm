@@ -98,17 +98,17 @@ sub execute {
                 next;
             }
             elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::Common::parse_axt_block( $content, $length_of );
+                my $info_refs = App::Fasops::Common::parse_axt_block( $content, $length_of );
                 $content = '';
 
-                next if App::Fasops::Common::seq_length( $info_of->{target}{seq} ) < $opt->{length};
-                next if App::Fasops::Common::seq_length( $info_of->{query}{seq} ) < $opt->{length};
+                next if App::Fasops::Common::seq_length( $info_refs->[0]{seq} ) < $opt->{length};
+                next if App::Fasops::Common::seq_length( $info_refs->[1]{seq} ) < $opt->{length};
 
-                $info_of->{target}{name} = $opt->{tname};
-                $info_of->{query}{name}  = $opt->{qname};
+                $info_refs->[0]{name} = $opt->{tname};
+                $info_refs->[1]{name}  = $opt->{qname};
 
-                for my $key (qw{target query}) {
-                    my $info = $info_of->{$key};
+                for my $i (0, 1) {
+                    my $info = $info_refs->[$i];
                     printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
                     printf {$out_fh} "%s\n",  $info->{seq};
                 }
