@@ -115,8 +115,7 @@ sub parse_axt_block {
             chr_strand => "+",
             seq        => $lines[1],
         },
-        {
-            name       => "query",
+        {   name       => "query",
             chr_name   => $second_chr,
             chr_start  => $second_start,
             chr_end    => $second_end,
@@ -312,24 +311,26 @@ sub read_fasta {
     my $filename = shift;
 
     tie my %seq_of, "Tie::IxHash";
-    my @lines = Path::Tiny::path($filename)->lines;
+
+    my $in_fh = path($filename)->openr;
 
     my $cur_name;
-    for my $line (@lines) {
+    while ( my $line = <$in_fh> ) {
+        chomp $line;
         if ( $line =~ /^\>\S+/ ) {
             $line =~ s/\>//;
-            chomp $line;
             $cur_name = $line;
             $seq_of{$cur_name} = '';
         }
         elsif ( $line =~ /^[\w-]+/ ) {
-            chomp $line;
             $seq_of{$cur_name} .= $line;
         }
         else {    # Blank line, do nothing
         }
+
     }
 
+    close $in_fh;
     return \%seq_of;
 }
 
