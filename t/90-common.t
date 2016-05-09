@@ -101,31 +101,106 @@ BEGIN {
     #$seq_legnth,            $number_of_comparable_bases,
     #$number_of_identities,  $number_of_differences,
     #$number_of_gaps,        $number_of_n,
-    #$number_of_align_error, $pi,
-    #$first_seq_gc,          $average_gc,
+    #$number_of_align_error, $D,
     my @data = (
 
-        #AAAATTTTGG
-        #AAAATTTTTG
-        [ [qw{ AAAATTTTGG AAAATTTTTG }], [ 10, 10, 9, 1, 0, 0, 0, 0.1, ], ],
-
-        #TTAGCCGCTGAGAAGC
-        #GTAGCCGCTGA-AGGC
-        [ [qw{ TTAGCCGCTGAGAAGC GTAGCCGCTGA-AGGC }], [ 16, 15, 13, 2, 1, 0, 0, 0.1333, ], ],
-
-        #GATTATCATCACCCCAGCCACATA
-        #GATTTT--TCACTCCATTCGCATA
-        [   [qw{ GATTATCATCACCCCAGCCACATW GATTTT--TCACTCCATTCGCATA }],
-            [ 24, 21, 16, 5, 2, 1, 0, 0.2381, ],
+        #                   *
+        [   [   qw{ AAAATTTTGG
+                    AAAATTTTTG }
+            ],
+            [ 10, 10, 9, 1, 0, 0, 0, 0.1, ],
         ],
 
+        #           *          * *
+        [   [   qw{ TTAGCCGCTGAGAAGC
+                    GTAGCCGCTGA-AGGC }
+            ],
+            [ 16, 15, 13, 2, 1, 0, 0, 0.1333, ],
+        ],
+
+        #               * **    *   ** **  *
+        [   [   qw{ GATTATCATCACCCCAGCCACATW
+                    GATTTT--TCACTCCATTCGCATA }
+            ],
+            [ 24, 21, 16, 5, 2, 1, 0, 0.2381, ],
+        ],
     );
 
     for my $i ( 0 .. $#data ) {
-        my ( $seq_pair_ref, $except_ref ) = @{ $data[$i] };
+        my ( $seq_refs, $except_ref ) = @{ $data[$i] };
 
-        my $result_multi_ref = App::Fasops::Common::multi_seq_stat($seq_pair_ref);
-        Test::Number::Delta::delta_ok( $result_multi_ref, $except_ref, "stat $i" );
+        my $result_ref = App::Fasops::Common::multi_seq_stat($seq_refs);
+        Test::Number::Delta::delta_ok( $result_ref, $except_ref, "stat $i" );
+    }
+}
+
+{
+    print "#ref_pair_D\n";
+
+    my @data = (
+
+        #
+        [   [   qw{ AAAATTTTTG
+                    AAAATTTTTG
+                    AAAATTTTTG }
+            ],
+            [ 0, 0, 0, ],
+        ],
+
+        #
+        [   [   qw{ AAAATTTTGG
+                    AAAATTTTGG
+                    AAAATTTTTG }
+            ],
+            [ 0, 0, 0, ],
+        ],
+
+        #                   *
+        [   [   qw{ AAAATTTTGG
+                    AAAATTTTTG
+                    AAAATTTTTG }
+            ],
+            [ 0.1, 0, 0, ],
+        ],
+
+        #                   *
+        [   [   qw{ AAAATTTTTG
+                    AAAATTTTGG
+                    AAAATTTTTG }
+            ],
+            [ 0, 0.1, 0, ],
+        ],
+
+        #                   *
+        [   [   qw{ AAAATTTTGG
+                    AAAATTTTAG
+                    AAAATTTTTG }
+            ],
+            [ 0, 0, 0.1, ],
+        ],
+
+        #               *   *
+        [   [   qw{ AAAATTTTGG
+                    AAAAGTTTTG
+                    AAAATTTTTG }
+            ],
+            [ 0.1, 0.1, 0, ],
+        ],
+
+        #            *  *   *
+        [   [   qw{ AAAATTTTGG
+                    ATAAGTTTTG
+                    A-AATT-TTG }
+            ],
+            [ 0.1, 0.1, 0.1, ],
+        ],
+    );
+
+    for my $i ( 0 .. $#data ) {
+        my ( $seq_refs, $except_ref ) = @{ $data[$i] };
+
+        my $result_ref = [ App::Fasops::Common::ref_pair_D($seq_refs) ];
+        Test::Number::Delta::delta_ok( $result_ref, $except_ref, "stat $i" );
     }
 }
 
