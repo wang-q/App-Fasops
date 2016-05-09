@@ -408,7 +408,7 @@ sub pair_D {
 # Split D value to D1 (substitutions in first_seq), D2( substitutions in second_seq) and Dcomplex
 # (substitutions can't be referred)
 sub ref_pair_D {
-    my $seq_refs = shift;
+    my $seq_refs = shift; # first, second, outgroup
 
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count != 3 ) {
@@ -422,8 +422,8 @@ sub ref_pair_D {
 
     for my $pos ( 1 .. $length ) {
         my $base0    = substr $seq_refs->[0], $pos - 1, 1;
-        my $base1    = substr $seq_refs->[0], $pos - 1, 1;
-        my $base_ref = substr $seq_refs->[0], $pos - 1, 1;
+        my $base1    = substr $seq_refs->[1], $pos - 1, 1;
+        my $base_ref = substr $seq_refs->[2], $pos - 1, 1;
         if ( $base0 ne $base1 ) {
             if (   $base0 =~ /[atcg]/i
                 && $base1 =~ /[atcg]/i
