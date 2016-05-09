@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.3.12  2016-05-09 17:14:03 CST
+    - Fix ref_pair_D
+
 0.3.11  2016-05-08 20:02:14 CST
     - Move subs from AlignDB::Util
 
