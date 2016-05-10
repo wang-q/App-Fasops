@@ -21,4 +21,6 @@ blib
 
 !.travis.yml
 
+# IDE
+.idea
 .komodotools
