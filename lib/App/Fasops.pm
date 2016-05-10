@@ -2,6 +2,8 @@ package App::Fasops;
 
 our $VERSION = '0.3.12';
 
+use strict;
+use warnings;
 use App::Cmd::Setup -app;
 
 1;
