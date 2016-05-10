@@ -12,6 +12,7 @@ use constant abstract => 'realign alignments';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "outgroup",    "Has outgroup at the end of blocks.", ],
         [ "msa=s", "Aligning program. Default is [clustalw].", { default => "mafft" } ],
         [   "quick",
             "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
@@ -75,38 +76,38 @@ sub execute {
             my $info_of = App::Fasops::Common::parse_block($content);
             $content = '';
 
+            my @keys     = keys %{$info_of};
+            my $seq_refs = [];
+            for my $key (@keys) {
+                push @{$seq_refs}, $info_of->{$key}{seq};
+            }
+
+            #----------------------------#
+            # realigning
+            #----------------------------#
             if ( $opt->{msa} ne "none" ) {
-                my @keys = keys %{$info_of};
-
-                my @seqs;
-                for my $key (@keys) {
-                    push @seqs, $info_of->{$key}{seq};
-                }
-
-                #----------------------------#
-                # realigning
-                #----------------------------#
-                my $refined;
                 if ( $opt->{quick} ) {
-                    $refined
-                        = App::Fasops::Common::align_seqs_quick( \@seqs, $opt->{msa}, $opt->{pad},
-                        $opt->{fill} );
+                    $seq_refs
+                        = App::Fasops::Common::align_seqs_quick( $seq_refs, $opt->{msa},
+                        $opt->{pad}, $opt->{fill} );
                 }
                 else {
-                    $refined = App::Fasops::Common::align_seqs( \@seqs, $opt->{msa} );
-                }
-
-                for my $i ( 0 .. $#keys ) {
-                    printf {$out_fh} ">%s\n",
-                        App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
-                    printf {$out_fh} "%s\n", uc $refined->[$i];
+                    $seq_refs = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
                 }
             }
-            else {
-                for my $key ( keys %{$info_of} ) {
-                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
-                    printf {$out_fh} "%s\n",  $info_of->{$key}{seq};
-                }
+
+            #----------------------------#
+            # trimming
+            #----------------------------#
+            App::Fasops::Common::trim_pure_dash($seq_refs);
+            if ( $opt->{outgroup} ) {
+                App::Fasops::Common::trim_outgroup($seq_refs);
+                App::Fasops::Common::trim_complex_indel($seq_refs);
+            }
+
+            for my $i ( 0 .. $#keys ) {
+                printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
+                printf {$out_fh} "%s\n",  uc $seq_refs->[$i];
             }
 
             print {$out_fh} "\n";
