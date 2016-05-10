@@ -12,7 +12,12 @@ use constant abstract => 'realign alignments';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "msa=s", "Aligning program. Default is [clustalw].", { default => "clustalw" } ],
+        [ "msa=s", "Aligning program. Default is [clustalw].", { default => "mafft" } ],
+        [   "quick",
+            "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
+        ],
+        [ "pad=i",  "In quick mode, enlarge indel regions", { default => 50 } ],
+        [ "fill=i", "In quick mode, join indel regions",    { default => 50 } ],
     );
 }
 
@@ -27,9 +32,9 @@ sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= "List of msa:\n";
-    $desc .= " " x 4 . "clustalw\n";
-    $desc .= " " x 4 . "muscle\n";
     $desc .= " " x 4 . "mafft\n";
+    $desc .= " " x 4 . "muscle\n";
+    $desc .= " " x 4 . "clustalw\n";
     $desc .= " " x 4 . "none:    means skip realigning\n";
 
     return $desc;
@@ -77,16 +82,27 @@ sub execute {
                 for my $key (@keys) {
                     push @seqs, $info_of->{$key}{seq};
                 }
-                my $refined = App::Fasops::Common::align_seqs( \@seqs, $opt->{msa} );
+
+                my $refined;
+
+                if ( $opt->{quick} ) {
+                    $refined
+                        = App::Fasops::Common::align_seqs_quick( \@seqs, $opt->{msa}, $opt->{pad},
+                        $opt->{fill} );
+                }
+                else {
+                    $refined = App::Fasops::Common::align_seqs( \@seqs, $opt->{msa} );
+                }
 
                 for my $i ( 0 .. $#keys ) {
-                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
-                    printf {$out_fh} "%s\n",  uc $refined->[$i];
+                    printf {$out_fh} ">%s\n",
+                        App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
+                    printf {$out_fh} "%s\n", uc $refined->[$i];
                 }
             }
             else {
                 for my $key ( keys %{$info_of} ) {
-                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $key } );
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
                     printf {$out_fh} "%s\n",  $info_of->{$key}{seq};
                 }
             }

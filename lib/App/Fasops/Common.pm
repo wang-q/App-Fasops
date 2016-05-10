@@ -212,6 +212,10 @@ sub align_seqs {
     my $seq_refs = shift;
     my $aln_prog = shift;
 
+    if ( !defined $aln_prog ) {
+        $aln_prog = "mafft";
+    }
+
     # get executable
     my $bin;
 
@@ -302,6 +306,59 @@ sub align_seqs {
 
     undef $temp_in;
     undef $temp_out;
+
+    return \@aligned;
+}
+
+sub align_seqs_quick {
+    my $seq_refs   = shift;
+    my $aln_prog   = shift;
+    my $indel_pad  = shift;
+    my $indel_fill = shift;
+
+    if ( !defined $aln_prog ) {
+        $aln_prog = "mafft";
+    }
+    if ( !defined $indel_pad ) {
+        $indel_pad = 50;
+    }
+    if ( !defined $indel_fill ) {
+        $indel_fill = 50;
+    }
+
+    my @aligned = @{$seq_refs};
+    my $seq_count = scalar @aligned;
+
+    # all indel regions
+    my $realign_region = AlignDB::IntSpan->new;
+    for my $seq ( @aligned ) {
+        my $indel_intspan = App::Fasops::Common::indel_intspan($seq);
+        $indel_intspan = $indel_intspan->pad($indel_pad);
+        $realign_region->merge($indel_intspan);
+    }
+
+    # join adjacent realign regions
+    $realign_region = $realign_region->fill( $indel_fill );
+
+    # realign all segments in realign_region
+    my @realign_region_spans = $realign_region->spans;
+    for my $span ( reverse @realign_region_spans ) {
+        my $seg_start = $span->[0];
+        my $seg_end   = $span->[1];
+
+        my @segments;
+        for my $i (0 .. $seq_count - 1) {
+            my $seg = substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1 );
+            push @segments, $seg;
+        }
+        my $realigned_segments = align_seqs( \@segments );
+
+        for my $i (0 .. $seq_count - 1) {
+            my $seg = $realigned_segments->[$i];
+            $seg = uc $seg;
+            substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1, $seg );
+        }
+    }
 
     return \@aligned;
 }
@@ -408,7 +465,7 @@ sub pair_D {
 # Split D value to D1 (substitutions in first_seq), D2( substitutions in second_seq) and Dcomplex
 # (substitutions can't be referred)
 sub ref_pair_D {
-    my $seq_refs = shift; # first, second, outgroup
+    my $seq_refs = shift;    # first, second, outgroup
 
     my $seq_count = scalar @{$seq_refs};
     if ( $seq_count != 3 ) {
