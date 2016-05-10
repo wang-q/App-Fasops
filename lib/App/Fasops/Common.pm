@@ -93,8 +93,8 @@ sub parse_axt_block {
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
 
-    my ($align_serial, $first_chr,  $first_start,  $first_end, $second_chr,
-        $second_start, $second_end, $query_strand, $align_score,
+    my (undef, $first_chr,  $first_start,  $first_end, $second_chr,
+        $second_start, $second_end, $query_strand, undef,
     ) = split /\s+/, $lines[0];
 
     if ( $query_strand eq "-" ) {
@@ -136,7 +136,7 @@ sub parse_maf_block {
     tie my %info_of, "Tie::IxHash";
 
     for my $sline (@lines) {
-        my ( $s, $src, $start, $size, $strand, $srcsize, $text ) = split /\s+/, $sline;
+        my ( undef, $src, $start, $size, $strand, undef, $text ) = split /\s+/, $sline;
 
         my ( $species, $chr_name ) = split /\./, $src;
         $chr_name = $species if !defined $chr_name;
@@ -332,7 +332,7 @@ sub align_seqs_quick {
     # all indel regions
     my $realign_region = AlignDB::IntSpan->new;
     for my $seq (@aligned) {
-        my $indel_intspan = App::Fasops::Common::indel_intspan($seq);
+        my $indel_intspan = indel_intspan($seq);
         $indel_intspan = $indel_intspan->pad($indel_pad);
         $realign_region->merge($indel_intspan);
     }
@@ -414,7 +414,7 @@ sub trim_outgroup {
     # Don't expand indel set here. Last seq is outgroup
     my @indel_intspans;
     for my $i ( 0 .. $seq_count - 2 ) {
-        my $indel_intspan = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+        my $indel_intspan = indel_intspan( $seq_refs->[$i] );
         push @indel_intspans, $indel_intspan;
     }
 
@@ -465,11 +465,11 @@ sub trim_complex_indel {
     # Don't expand indel set here. Last seq is outgroup
     my @indel_intspans;
     for my $i (@ingroup_idx) {
-        my $indel_intspan = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+        my $indel_intspan = indel_intspan( $seq_refs->[$i] );
         push @indel_intspans, $indel_intspan;
     }
     my $outgroup_indel_intspan
-        = App::Fasops::Common::indel_intspan( $seq_refs->[ $seq_count - 1 ] );
+        = indel_intspan( $seq_refs->[ $seq_count - 1 ] );
 
     # find trim_region
     my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
