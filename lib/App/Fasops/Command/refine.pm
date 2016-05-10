@@ -83,8 +83,10 @@ sub execute {
                     push @seqs, $info_of->{$key}{seq};
                 }
 
+                #----------------------------#
+                # realigning
+                #----------------------------#
                 my $refined;
-
                 if ( $opt->{quick} ) {
                     $refined
                         = App::Fasops::Common::align_seqs_quick( \@seqs, $opt->{msa}, $opt->{pad},

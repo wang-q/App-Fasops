@@ -326,34 +326,33 @@ sub align_seqs_quick {
         $indel_fill = 50;
     }
 
-    my @aligned = @{$seq_refs};
+    my @aligned   = @{$seq_refs};
     my $seq_count = scalar @aligned;
 
     # all indel regions
     my $realign_region = AlignDB::IntSpan->new;
-    for my $seq ( @aligned ) {
+    for my $seq (@aligned) {
         my $indel_intspan = App::Fasops::Common::indel_intspan($seq);
         $indel_intspan = $indel_intspan->pad($indel_pad);
         $realign_region->merge($indel_intspan);
     }
 
     # join adjacent realign regions
-    $realign_region = $realign_region->fill( $indel_fill );
+    $realign_region = $realign_region->fill($indel_fill);
 
     # realign all segments in realign_region
-    my @realign_region_spans = $realign_region->spans;
-    for my $span ( reverse @realign_region_spans ) {
+    for my $span ( reverse $realign_region->spans ) {
         my $seg_start = $span->[0];
         my $seg_end   = $span->[1];
 
         my @segments;
-        for my $i (0 .. $seq_count - 1) {
+        for my $i ( 0 .. $seq_count - 1 ) {
             my $seg = substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1 );
             push @segments, $seg;
         }
         my $realigned_segments = align_seqs( \@segments );
 
-        for my $i (0 .. $seq_count - 1) {
+        for my $i ( 0 .. $seq_count - 1 ) {
             my $seg = $realigned_segments->[$i];
             $seg = uc $seg;
             substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1, $seg );
@@ -361,6 +360,164 @@ sub align_seqs_quick {
     }
 
     return \@aligned;
+}
+
+#----------------------------#
+# trim pure dash regions
+#----------------------------#
+sub trim_pure_dash {
+    my $seq_refs = shift;
+
+    my $seq_count  = @{$seq_refs};
+    my $seq_length = length $seq_refs->[0];
+
+    my $trim_region = AlignDB::IntSpan->new;
+
+    for my $pos ( 1 .. $seq_length ) {
+        my @bases;
+        for my $i ( 0 .. $seq_count - 1 ) {
+            my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
+            push @bases, $base;
+        }
+
+        if ( List::MoreUtils::PP::all { $_ eq '-' } @bases ) {
+            $trim_region->add($pos);
+        }
+    }
+
+    for my $span ( reverse $trim_region->spans ) {
+        my $seg_start = $span->[0];
+        my $seg_end   = $span->[1];
+
+        for my $i ( 0 .. $seq_count - 1 ) {
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+        }
+    }
+
+    return;
+}
+
+#----------------------------#
+# trim outgroup only sequence
+#----------------------------#
+# if intersect is superset of union
+#   T G----C
+#   Q G----C
+#   O GAAAAC
+sub trim_outgroup {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+
+    Carp::confess "Need three or more sequences\n" if $seq_count < 3;
+
+    # Don't expand indel set here. Last seq is outgroup
+    my @indel_intspans;
+    for my $i ( 0 .. $seq_count - 2 ) {
+        my $indel_intspan = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+        push @indel_intspans, $indel_intspan;
+    }
+
+    # find trim_region
+    my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
+    my $intersect_set = AlignDB::IntSpan::intersect(@indel_intspans);
+
+    my $trim_region = AlignDB::IntSpan->new;
+    for my $span ( $union_set->runlists ) {
+        if ( $intersect_set->superset($span) ) {
+            $trim_region->add($span);
+        }
+    }
+
+    # trim all segments in trim_region
+    for my $span ( reverse $trim_region->spans ) {
+        my $seg_start = $span->[0];
+        my $seg_end   = $span->[1];
+
+        for my $i ( 0 .. $seq_count - 1 ) {
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+        }
+    }
+
+    return;
+}
+
+#----------------------------#
+# record complex indels and ingroup indels
+#----------------------------#
+# All ingroup intersect sets are parts of complex indels after trim_outgroup()
+# intersect 4-6
+#   T GGA--C
+#   Q G----C
+#   O GGAGAC
+# result, complex_region 2-3
+#   T GGAC
+#   Q G--C
+#   O GGAC
+sub trim_complex_indel {
+    my $seq_refs = shift;
+
+    my $seq_count   = scalar @{$seq_refs};
+    my @ingroup_idx = ( 0 .. $seq_count - 2 );
+
+    Carp::confess "Need three or more sequences\n" if $seq_count < 3;
+
+    # Don't expand indel set here. Last seq is outgroup
+    my @indel_intspans;
+    for my $i (@ingroup_idx) {
+        my $indel_intspan = App::Fasops::Common::indel_intspan( $seq_refs->[$i] );
+        push @indel_intspans, $indel_intspan;
+    }
+    my $outgroup_indel_intspan
+        = App::Fasops::Common::indel_intspan( $seq_refs->[ $seq_count - 1 ] );
+
+    # find trim_region
+    my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
+    my $intersect_set = AlignDB::IntSpan::intersect(@indel_intspans);
+
+    my $complex_region = AlignDB::IntSpan->new;
+    for ( reverse $intersect_set->spans ) {
+        my $seg_start = $_->[0];
+        my $seg_end   = $_->[1];
+
+        # trim sequence, including outgroup
+        for my $i ( 0 .. $seq_count - 1 ) {
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+        }
+
+        # add to complex_region
+        for my $span ( $union_set->runlists ) {
+            my $sub_union_set = AlignDB::IntSpan->new($span);
+            if ( $sub_union_set->superset("$seg_start-$seg_end") ) {
+                $complex_region->merge($sub_union_set);
+            }
+        }
+
+        # modify all related set
+        $union_set = $union_set->banish_span( $seg_start, $seg_end );
+        for (@ingroup_idx) {
+            $indel_intspans[$_]
+                = $indel_intspans[$_]->banish_span( $seg_start, $seg_end );
+        }
+        $outgroup_indel_intspan->banish_span( $seg_start, $seg_end );
+        $complex_region = $complex_region->banish_span( $seg_start, $seg_end );
+    }
+
+    # add ingroup-outgroup complex indels to complex_region
+    for my $i (@ingroup_idx) {
+        my $outgroup_intersect_intspan = $outgroup_indel_intspan->intersect( $indel_intspans[$i] );
+        for my $sub_out_set ( $outgroup_intersect_intspan->sets ) {
+            for my $sub_union_set ( $union_set->sets ) {
+
+                # union_set > intersect_set
+                if ( $sub_union_set->larger_than($sub_out_set) ) {
+                    $complex_region->merge($sub_union_set);
+                }
+            }
+        }
+    }
+
+    return $complex_region->runlist;
 }
 
 # read normal fasta files
