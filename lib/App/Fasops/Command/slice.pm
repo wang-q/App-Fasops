@@ -109,6 +109,16 @@ sub execute {
                 #                    i_chr_intspan => $i_chr_intspan->runlist,
                 #                };
 
+                # target sequence intspan
+                my $target_seq_intspan = App::Fasops::Common::seq_intspan( $info_of->{$name}{seq} );
+
+                # every sequence intspans
+                my %seq_intspan_of;
+                for my $key ( keys %{$info_of} ) {
+                    $seq_intspan_of{$key}
+                        = App::Fasops::Common::seq_intspan( $info_of->{$key}{seq} );
+                }
+
                 # all indel regions
                 my $indel_intspan = AlignDB::IntSpan->new;
                 for my $key ( keys %{$info_of} ) {
@@ -116,20 +126,17 @@ sub execute {
                         App::Fasops::Common::indel_intspan( $info_of->{$key}{seq} ) );
                 }
 
-                # sequence set
-                my $seq_intspan = App::Fasops::Common::seq_intspan( $info_of->{$name}{seq} );
-
                 # there may be more than one subslice intersect this alignment
                 my @sub_slices;
                 for my AlignDB::IntSpan $ss_chr_intspan ( $i_chr_intspan->sets ) {
 
                     # chr positions to align positions
                     my $ss_start
-                        = App::Fasops::Common::chr_to_align( $seq_intspan, $ss_chr_intspan->min,
-                        $chr_start, $chr_strand );
+                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
+                        $ss_chr_intspan->min, $chr_start, $chr_strand );
                     my $ss_end
-                        = App::Fasops::Common::chr_to_align( $seq_intspan, $ss_chr_intspan->max,
-                        $chr_start, $chr_strand );
+                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
+                        $ss_chr_intspan->max, $chr_start, $chr_strand );
                     next if $ss_start >= $ss_end;
 
                     my $ss_intspan = AlignDB::IntSpan->new;
@@ -155,12 +162,12 @@ sub execute {
 
                     for my $key ( keys %{$info_of} ) {
                         my $key_start = App::Fasops::Common::align_to_chr(
-                            $seq_intspan, $ss_start,
+                            $seq_intspan_of{$key}, $ss_start,
                             $info_of->{$key}{chr_start},
                             $info_of->{$key}{chr_strand}
                         );
                         my $key_end = App::Fasops::Common::align_to_chr(
-                            $seq_intspan, $ss_end,
+                            $seq_intspan_of{$key}, $ss_end,
                             $info_of->{$key}{chr_start},
                             $info_of->{$key}{chr_strand}
                         );
