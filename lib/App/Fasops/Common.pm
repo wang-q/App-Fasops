@@ -93,7 +93,7 @@ sub parse_axt_block {
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
 
-    my (undef, $first_chr,  $first_start,  $first_end, $second_chr,
+    my (undef,         $first_chr,  $first_start,  $first_end, $second_chr,
         $second_start, $second_end, $query_strand, undef,
     ) = split /\s+/, $lines[0];
 
@@ -204,6 +204,19 @@ sub indel_intspan {
         $end = $length;
         $intspan->add_pair( $start, $end );
     }
+
+    return $intspan;
+}
+
+#@returns AlignDB::IntSpan
+sub seq_intspan {
+    my $seq = shift;
+
+    my $length  = length($seq);
+    my $intspan = AlignDB::IntSpan->new;
+    $intspan->add_pair( 1, $length );
+
+    $intspan->subtract( indel_intspan($seq) );
 
     return $intspan;
 }
@@ -468,8 +481,7 @@ sub trim_complex_indel {
         my $indel_intspan = indel_intspan( $seq_refs->[$i] );
         push @indel_intspans, $indel_intspan;
     }
-    my $outgroup_indel_intspan
-        = indel_intspan( $seq_refs->[ $seq_count - 1 ] );
+    my $outgroup_indel_intspan = indel_intspan( $seq_refs->[ $seq_count - 1 ] );
 
     # find trim_region
     my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
@@ -721,6 +733,93 @@ sub multi_seq_stat {
 
     return [ $legnth, $comparable_bases, $identities, $differences, $gaps,
         $ns, $align_errors, $D, ];
+}
+
+# Give a chr position, return an align position starting from '1'.
+sub chr_to_align {
+    my AlignDB::IntSpan $intspan = shift;
+    my $pos = shift;
+
+    my $chr_start  = shift || 1;
+    my $chr_strand = shift || "+";
+
+    my $chr_end = $chr_start + $intspan->size - 1;
+
+    if ( $pos < $chr_start || $pos > $chr_end ) {
+        Carp::confess "chr pos out of ranges\n";
+    }
+
+    my $align_pos;
+    if ( $chr_strand eq "+" ) {
+        $align_pos = $pos - $chr_start + 1;
+        $align_pos = $intspan->at($align_pos);
+    }
+    else {
+        $align_pos = $pos - $chr_start + 1;
+        $align_pos = $intspan->at( -$align_pos );
+    }
+
+    return $align_pos;
+}
+
+# Give a chr position, return an align position starting from '1'.
+# If the position in target is located in a gap, then return the left base's position.
+# 5' for positive strand and 3' for negative stran.
+# (Just like GATK's indel left align)
+sub align_to_chr {
+    my AlignDB::IntSpan $intspan = shift;
+    my $pos = shift;
+
+    my $chr_start  = shift || 1;
+    my $chr_strand = shift || "+";
+
+    my $chr_end = $chr_start + $intspan->size - 1;
+
+    if ( $pos < 1 ) {
+        Carp::confess "align pos out of ranges\n";
+    }
+
+    my $chr_pos;
+    if ( $intspan->contains($pos) ) {
+        $chr_pos = $intspan->index($pos);
+    }
+    elsif ( $pos < $intspan->min ) {
+        $chr_pos = 1;
+    }
+    elsif ( $pos > $intspan->max ) {
+        $chr_pos = $intspan->size;
+    }
+    else {
+        # pin to left base
+        my @spans = $intspan->spans;
+        for my $i ( 0 .. $#spans ) {
+            if ( $spans[$i]->[1] < $pos ) {
+                next;
+            }
+            else {
+                $pos = $spans[ $i - 1 ]->[1];
+                last;
+            }
+        }
+        $chr_pos = $intspan->index($pos);
+    }
+
+    if ( $chr_strand eq "+" ) {
+        $chr_pos = $chr_pos + $chr_start - 1;
+    }
+    else {
+        $chr_pos = $chr_end - $chr_pos + 1;
+    }
+
+    #        $chr_pos = $pos - $chr_start + 1;
+    #        $chr_pos = $intspan->at($chr_pos);
+
+    #    else {
+    #        $chr_pos = $pos - $chr_start + 1;
+    #        $chr_pos = $intspan->at( -$chr_pos );
+    #    }
+
+    return $chr_pos;
 }
 
 1;
