@@ -17,7 +17,7 @@ App::Fasops - operating blocked fasta files
 =head1 SYNOPSIS
 
     fasops <command> [-?h] [long options...]
-    	-? -h --help    show help
+        -? -h --help    show help
 
     Available commands:
 
@@ -29,8 +29,10 @@ App::Fasops - operating blocked fasta files
          links: scan blocked fasta files and output links between pieces
        maf2fas: convert maf to blocked fasta
          names: scan blocked fasta files and output all species names
+        refine: realign alignments
        replace: replace headers from a blocked fasta
       separate: separate blocked fasta files by species
+         slice: extract alignment slices from a blocked fasta
          split: split blocked fasta files to separate per-alignment files
         subset: extract a subset of species from a blocked fasta
 

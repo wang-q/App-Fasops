@@ -1,6 +1,7 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+    - Specify versions of dependancies.
 
 0.3.14  2016-05-12 02:15:06 CST
     - Add `fasops slice`
