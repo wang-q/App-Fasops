@@ -1,14 +1,14 @@
-requires 'App::Cmd';
-requires 'AlignDB::IntSpan';
-requires 'List::MoreUtils';
+requires 'App::Cmd', '0.330';
+requires 'AlignDB::IntSpan', '1.0.7';
+requires 'List::MoreUtils', '0.413';
 requires 'IO::Zlib';
-requires 'Path::Tiny';
-requires 'Tie::IxHash';
-requires 'YAML::Syck';
+requires 'Path::Tiny', '0.076';
+requires 'Tie::IxHash', '1.23';
+requires 'YAML::Syck', '1.29';
 requires 'App::RL', '0.2.14';
-requires 'perl', '5.010000';
+requires 'perl', '5.010001';
 
 on test => sub {
-    requires 'Test::More', 0.88;
-    requires 'Test::Number::Delta';
+    requires 'Test::More', '0.88';
+    requires 'Test::Number::Delta', '1.06';
 };
