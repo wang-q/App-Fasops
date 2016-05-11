@@ -746,7 +746,7 @@ sub chr_to_align {
     my $chr_end = $chr_start + $intspan->size - 1;
 
     if ( $pos < $chr_start || $pos > $chr_end ) {
-        Carp::confess "chr pos out of ranges\n";
+        Carp::confess "[$pos] out of ranges [$chr_start,$chr_end]\n";
     }
 
     my $align_pos;
