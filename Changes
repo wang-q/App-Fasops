@@ -1,6 +1,8 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+
+0.4.0  2016-05-12 03:40:52 CST
     - Specify versions of dependancies.
 
 0.3.14  2016-05-12 02:15:06 CST

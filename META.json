@@ -37,21 +37,21 @@
       },
       "runtime" : {
          "requires" : {
-            "AlignDB::IntSpan" : "0",
-            "App::Cmd" : "0",
+            "AlignDB::IntSpan" : "v1.0.7",
+            "App::Cmd" : "0.330",
             "App::RL" : "v0.2.14",
             "IO::Zlib" : "0",
-            "List::MoreUtils" : "0",
-            "Path::Tiny" : "0",
-            "Tie::IxHash" : "0",
-            "YAML::Syck" : "0",
-            "perl" : "5.010000"
+            "List::MoreUtils" : "0.413",
+            "Path::Tiny" : "0.076",
+            "Tie::IxHash" : "1.23",
+            "YAML::Syck" : "1.29",
+            "perl" : "5.010001"
          }
       },
       "test" : {
          "requires" : {
             "Test::More" : "0.88",
-            "Test::Number::Delta" : "0"
+            "Test::Number::Delta" : "1.06"
          }
       }
    },
@@ -67,6 +67,6 @@
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
-   "version" : "0.3.14"
+   "version" : "0.4.0"
 }
 
