@@ -811,14 +811,6 @@ sub align_to_chr {
         $chr_pos = $chr_end - $chr_pos + 1;
     }
 
-    #        $chr_pos = $pos - $chr_start + 1;
-    #        $chr_pos = $intspan->at($chr_pos);
-
-    #    else {
-    #        $chr_pos = $pos - $chr_start + 1;
-    #        $chr_pos = $intspan->at( -$chr_pos );
-    #    }
-
     return $chr_pos;
 }
 
