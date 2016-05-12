@@ -13,6 +13,7 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "first",       "Always keep the first species." ],
+        [ "required",    "Skip blocks not containing all the names." ],
     );
 }
 
@@ -48,7 +49,6 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     my @names = @{ App::RL::Common::read_names( $args->[1] ) };
-    my %seen = map { $_ => 1 } @names;
 
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     my $out_fh;
@@ -61,7 +61,7 @@ sub execute {
 
     {
         my $content = '';    # content of one block
-        while (1) {
+    BLOCK: while (1) {
             last if $in_fh->eof and $content eq '';
             my $line = '';
             if ( !$in_fh->eof ) {
@@ -71,21 +71,23 @@ sub execute {
                 my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
-                my $keep = '';
-                if ( $opt->{first} ) {
-                    $keep = ( keys %{$info_of} )[0];
-                }
-
-                my @block_names = @names;
+                my @needed_names = @names;
                 if ( $opt->{first} ) {
                     my $first = ( keys %{$info_of} )[0];
-                    @block_names = List::MoreUtils::uniq( $first, @block_names );
+                    @needed_names = List::MoreUtils::PP::uniq( $first, @needed_names );
                 }
 
-                for my $name (@block_names) {
+                if ( $opt->{required} ) {
+                    for my $name (@needed_names) {
+                        next BLOCK unless exists $info_of->{$name};
+                    }
+                }
+
+                for my $name (@needed_names) {
                     if ( exists $info_of->{$name} ) {
-                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$name} );
-                        printf {$out_fh} "%s\n",  $info_of->{$name}{seq};
+                        printf {$out_fh} ">%s\n",
+                            App::RL::Common::encode_header( $info_of->{$name} );
+                        printf {$out_fh} "%s\n", $info_of->{$name}{seq};
                     }
                 }
                 print {$out_fh} "\n";
