@@ -13,6 +13,7 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "name=s",      "According to this species. Default is the first one." ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
     );
 }
 
@@ -151,7 +152,7 @@ sub execute {
                         my $indel_island = $indel_intspan->find_islands($ss_end);
                         $ss_intspan->remove($indel_island);
                     }
-                    next if $ss_intspan->size <= 1;
+                    next if $ss_intspan->size <= $opt->{length};
                     push @sub_slices, $ss_intspan;
                 }
 
