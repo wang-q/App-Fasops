@@ -12,7 +12,7 @@ use constant abstract => 'extract alignment slices from a blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name=s",      "According to this species. Default is the first one." ],
+        [ "name|n=s",      "According to this species. Default is the first one." ],
         [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
     );
 }
@@ -35,7 +35,9 @@ sub description {
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need two input files.") unless @$args == 2;
+    if (@{$args} != 2 ) {
+        $self->usage_error("This command need two input files.\nWe have @{$args}");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
