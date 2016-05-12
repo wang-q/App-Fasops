@@ -12,6 +12,11 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "name|n=s",    "Only output this species." ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [   "trim|t=i",
+            "Trim align borders to avoid some overlaps in lastz results. Default is [0]",
+            { default => 0 }
+        ],
     );
 }
 
@@ -25,7 +30,7 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
@@ -75,6 +80,10 @@ sub execute {
                     }
                 }
 
+                if ( $opt->{length} ) {
+                    next if length $info_of->{ $names[0] }{seq} < $opt->{length};
+                }
+
                 for my $key (@names) {
                     my $name     = $info_of->{$key}{name};
                     my $chr_name = $info_of->{$key}{chr_name};
@@ -86,8 +95,13 @@ sub execute {
                         $count_of{$name}->{$chr_name} = AlignDB::IntSpan->new;
                     }
 
-                    $count_of{$name}->{$chr_name}
-                        ->add_pair( $info_of->{$key}{chr_start}, $info_of->{$key}{chr_end} );
+                    my $intspan = AlignDB::IntSpan->new->add_pair( $info_of->{$key}{chr_start},
+                        $info_of->{$key}{chr_end} );
+                    if ( $opt->{trim} ) {
+                        $intspan = $intspan->trim( $opt->{trim} );
+                    }
+
+                    $count_of{$name}->{$chr_name}->add($intspan);
                 }
             }
             else {
