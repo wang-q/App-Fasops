@@ -11,8 +11,9 @@ use constant abstract => 'split blocked fasta files to separate per-alignment fi
 
 sub opt_spec {
     return (
-        [ "outdir|o=s", "output location" ],
-        [ "rm|r",       "if outdir exists, remove it before operating" ],
+        [ "outdir|o=s", "Output location, [stdout] for screen" ],
+        [ "rm|r",       "If outdir exists, remove it before operating." ],
+        [ "chr",        "Split by chromosomes." ],
     );
 }
 
@@ -47,21 +48,18 @@ sub validate_args {
         if ( $opt->{rm} ) {
             Path::Tiny::path( $opt->{outdir} )->remove_tree;
         }
-        else {
-            $self->usage_error(
-                "Output directory [@{[$opt->{outdir}]}] exists, you should remove it first or add --rm option to avoid errors."
-            );
-        }
     }
 
-    Path::Tiny::path( $opt->{outdir} )->mkpath;
+    if ( lc( $opt->{outdir} ) ne "stdout" ) {
+        Path::Tiny::path( $opt->{outdir} )->mkpath;
+    }
 }
 
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
 
         my $content = '';    # content of one block
         while (1) {
@@ -71,22 +69,38 @@ sub execute {
                 $line = $in_fh->getline;
             }
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block($content);
                 $content = '';
 
-                my $target   = ( keys %{$info_of} )[0];
-                my $filename = App::RL::Common::encode_header( $info_of->{$target} );
-                $filename =~ s/\|.+//;    # remove addtional fields
-                $filename =~ s/[\(\)\:]+/./g;
-                $filename .= '.fas';
-                $filename = Path::Tiny::path( $opt->{outdir}, $filename );
-
-                open my $out_fh, ">", $filename;
-                for my $key ( keys %{$info_of} ) {
-                    print {$out_fh} ">" . $info_of->{$key}{name} . "\n";
-                    print {$out_fh} $info_of->{$key}{seq} . "\n";
+                if ( lc( $opt->{outdir} ) eq "stdout" ) {
+                    for my $key ( keys %{$info_of} ) {
+                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        print $info_of->{$key}{seq} . "\n";
+                    }
                 }
-                close $out_fh;
+                else {
+                    my $target = ( keys %{$info_of} )[0];
+                    my $filename;
+                    if ( $opt->{chr} ) {
+                        $filename = $info_of->{$target}{chr_name};
+                        $filename .= '.fas';
+                    }
+                    else {
+                        $filename = App::RL::Common::encode_header( $info_of->{$target} );
+                        $filename =~ s/\|.+//;    # remove addtional fields
+                        $filename =~ s/[\(\)\:]+/./g;
+                        $filename .= '.fas';
+                    }
+                    $filename = Path::Tiny::path( $opt->{outdir}, $filename );
+
+                    open my $out_fh, ">>", $filename;
+                    for my $key ( keys %{$info_of} ) {
+                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        print {$out_fh} $info_of->{$key}{seq} . "\n";
+                    }
+                    print {$out_fh} "\n";
+                    close $out_fh;
+                }
             }
             else {
                 $content .= $line;
