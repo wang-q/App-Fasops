@@ -95,7 +95,8 @@ sub execute {
 
                     open my $out_fh, ">>", $filename;
                     for my $key ( keys %{$info_of} ) {
-                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        printf {$out_fh} ">%s\n",
+                            App::RL::Common::encode_header( $info_of->{$key} );
                         print {$out_fh} $info_of->{$key}{seq} . "\n";
                     }
                     print {$out_fh} "\n";
