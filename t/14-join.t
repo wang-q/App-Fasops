@@ -5,8 +5,8 @@ use App::Cmd::Tester;
 
 use App::Fasops;
 
-my $result = test_app( 'App::Fasops' => [qw(help slice)] );
-like( $result->stdout, qr{slice}, 'descriptions' );
+my $result = test_app( 'App::Fasops' => [qw(help join)] );
+like( $result->stdout, qr{join}, 'descriptions' );
 
 $result = test_app(
     'App::Fasops' => [
