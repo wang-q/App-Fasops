@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use autodie;
 
+use MCE;
+use MCE::Flow Sereal => 1;
+
 use App::Fasops -command;
 use App::RL::Common;
 use App::Fasops::Common;
@@ -13,12 +16,19 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "outgroup",    "Has outgroup at the end of blocks.", ],
-        [ "msa=s", "Aligning program. Default is [clustalw].", { default => "mafft" } ],
+        [   "parallel|p=i",
+            "run in parallel mode. Default is [1]",
+            { default => 1 },
+        ],
+        [   "msa=s",
+            "Aligning program. Default is [clustalw].",
+            { default => "mafft" },
+        ],
         [   "quick",
             "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
         ],
-        [ "pad=i",  "In quick mode, enlarge indel regions", { default => 50 } ],
-        [ "fill=i", "In quick mode, join indel regions",    { default => 50 } ],
+        [ "pad=i", "In quick mode, enlarge indel regions", { default => 50 }, ],
+        [ "fill=i", "In quick mode, join indel regions", { default => 50 }, ],
     );
 }
 
@@ -65,6 +75,7 @@ sub execute {
         open $out_fh, ">", $opt->{outfile};
     }
 
+    my @infos;    # collect blocks for parallelly refining
     my $content = '';    # content of one block
     while (1) {
         last if $in_fh->eof and $content eq '';
@@ -76,49 +87,88 @@ sub execute {
             my $info_of = App::Fasops::Common::parse_block($content);
             $content = '';
 
-            my @keys     = keys %{$info_of};
-            my $seq_refs = [];
-            for my $key (@keys) {
-                push @{$seq_refs}, $info_of->{$key}{seq};
+            if ( $opt->{parallel} >= 2 ) {
+                push @infos, $info_of;
             }
-
-            #----------------------------#
-            # realigning
-            #----------------------------#
-            if ( $opt->{msa} ne "none" ) {
-                if ( $opt->{quick} ) {
-                    $seq_refs
-                        = App::Fasops::Common::align_seqs_quick( $seq_refs, $opt->{msa},
-                        $opt->{pad}, $opt->{fill} );
-                }
-                else {
-                    $seq_refs = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
-                }
+            else {
+                my $out_string = proc_block( $info_of, $opt );
+                print {$out_fh} $out_string;
             }
-
-            #----------------------------#
-            # trimming
-            #----------------------------#
-            App::Fasops::Common::trim_pure_dash($seq_refs);
-            if ( $opt->{outgroup} ) {
-                App::Fasops::Common::trim_outgroup($seq_refs);
-                App::Fasops::Common::trim_complex_indel($seq_refs);
-            }
-
-            for my $i ( 0 .. $#keys ) {
-                printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
-                printf {$out_fh} "%s\n",  uc $seq_refs->[$i];
-            }
-
-            print {$out_fh} "\n";
         }
         else {
             $content .= $line;
         }
     }
 
+    if ( $opt->{parallel} >= 2 ) {
+        my $worker = sub {
+            my ( $self, $chunk_ref, $chunk_id ) = @_;
+
+            my $info_of = $chunk_ref->[0];
+            my $out_string = proc_block( $info_of, $opt );
+            MCE->gather($out_string);
+        };
+
+        MCE::Flow::init {
+            chunk_size  => 1,
+            max_workers => $opt->{parallel},
+        };
+        my @blocks = mce_flow $worker, @infos;
+        MCE::Flow::finish;
+
+        for my $block (@blocks) {
+            print {$out_fh} $block;
+        }
+    }
+
     close $out_fh;
     $in_fh->close;
+}
+
+sub proc_block {
+    my $info_of = shift;
+    my $opt     = shift;
+
+    my @keys     = keys %{$info_of};
+    my $seq_refs = [];
+    for my $key (@keys) {
+        push @{$seq_refs}, $info_of->{$key}{seq};
+    }
+
+    #----------------------------#
+    # realigning
+    #----------------------------#
+    if ( $opt->{msa} ne "none" ) {
+        if ( $opt->{quick} ) {
+            $seq_refs
+                = App::Fasops::Common::align_seqs_quick( $seq_refs,
+                $opt->{msa}, $opt->{pad}, $opt->{fill} );
+        }
+        else {
+            $seq_refs
+                = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
+        }
+    }
+
+    #----------------------------#
+    # trimming
+    #----------------------------#
+    App::Fasops::Common::trim_pure_dash($seq_refs);
+    if ( $opt->{outgroup} ) {
+        App::Fasops::Common::trim_outgroup($seq_refs);
+        App::Fasops::Common::trim_complex_indel($seq_refs);
+    }
+
+    my $out_string;
+
+    for my $i ( 0 .. $#keys ) {
+        $out_string .= sprintf ">%s\n",
+            App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
+        $out_string .= sprintf "%s\n", uc $seq_refs->[$i];
+    }
+    $out_string .= "\n";
+
+    return $out_string;
 }
 
 1;
