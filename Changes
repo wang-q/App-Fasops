@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.4.3  2016-05-21 19:47:58 CST
+    - Parallelise command refine
+
 0.4.2  2016-05-14 03:54:19 CST
     - Add `fasops join`
     - Add --required to command subset

@@ -42,6 +42,7 @@
             "App::RL" : "v0.2.14",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0.413",
+            "MCE" : "1.600",
             "Path::Tiny" : "0.076",
             "Tie::IxHash" : "1.23",
             "YAML::Syck" : "1.29",
@@ -67,6 +68,6 @@
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
-   "version" : "0.4.2"
+   "version" : "0.4.3"
 }
 
