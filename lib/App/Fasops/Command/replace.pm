@@ -23,18 +23,23 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
-    $desc .= "\t<replace.tsv> is a tab-separated file containing more than one fields.\n";
+    $desc
+        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc
+        .= "\t<replace.tsv> is a tab-separated file containing more than one fields.\n";
     $desc .= "\t\toriginal_name\treplace_name\tmore_replace_name\n";
     $desc .= "\t\tWith one field will delete the whole alignment block.\n";
-    $desc .= "\t\tWith three or more fields will duplicate the whole alignment block.\n";
+    $desc
+        .= "\t\tWith three or more fields will duplicate the whole alignment block.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need two input files.") unless @{$args} == 2;
+    if ( @{$args} != 2 ) {
+        $self->usage_error("This command need two input files.");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
@@ -76,36 +81,47 @@ sub execute {
 
                 my @ori_names = keys %{$info_of};
 
-                my @replace_names = grep { exists $info_of->{$_} } keys %{$replace};
+                my @replace_names
+                    = grep { exists $info_of->{$_} } keys %{$replace};
 
                 if ( @replace_names == 0 ) {    # block untouched
                     for my $header (@ori_names) {
-                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
-                        printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
+                        printf {$out_fh} ">%s\n",
+                            App::RL::Common::encode_header(
+                            $info_of->{$header} );
+                        printf {$out_fh} "%s\n", $info_of->{$header}{seq};
                     }
                     print {$out_fh} "\n";
                 }
-                elsif ( @replace_names == 1 ) {    # each replaces create a new block
+                elsif ( @replace_names == 1 )
+                {    # each replaces create a new block
                     my $ori_name = $replace_names[0];
                     for my $new_name ( @{ $replace->{$ori_name} } ) {
                         for my $header (@ori_names) {
                             if ( $header eq $ori_name ) {
                                 printf {$out_fh} ">%s\n", $new_name;
-                                printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
+                                printf {$out_fh} "%s\n",
+                                    $info_of->{$header}{seq};
                             }
                             else {
-                                printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
-                                printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
+                                printf {$out_fh} ">%s\n",
+                                    App::RL::Common::encode_header(
+                                    $info_of->{$header} );
+                                printf {$out_fh} "%s\n",
+                                    $info_of->{$header}{seq};
                             }
                         }
                         print {$out_fh} "\n";
                     }
                 }
                 else {
-                    Carp::carp "Don't support multiply records in one block. @replace_names\n";
+                    Carp::carp
+                        "Don't support multiply records in one block. @replace_names\n";
                     for my $header (@ori_names) {
-                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header( $info_of->{$header} );
-                        printf {$out_fh} "%s\n",  $info_of->{$header}{seq};
+                        printf {$out_fh} ">%s\n",
+                            App::RL::Common::encode_header(
+                            $info_of->{$header} );
+                        printf {$out_fh} "%s\n", $info_of->{$header}{seq};
                     }
                     print {$out_fh} "\n";
                 }

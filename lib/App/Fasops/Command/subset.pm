@@ -27,18 +27,26 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
-    $desc .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
-    $desc .= "\tNames in the output file will following the order in <name.list>.\n";
+    $desc
+        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc
+        .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
+    $desc
+        .= "\tNames in the output file will following the order in <name.list>.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need a input file.") unless @$args;
-    $self->usage_error("The input file [@{[$args->[0]]}] doesn't exist.")
-        unless -e $args->[0];
+    if ( @{$args} != 2 ) {
+        $self->usage_error("This command need two input files.");
+    }
+    for ( @{$args} ) {
+        if ( !Path::Tiny::path($_)->is_file ) {
+            $self->usage_error("The input file [$_] doesn't exist.");
+        }
+    }
 
     if ( !exists $opt->{outfile} ) {
         $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".fas";
@@ -74,7 +82,8 @@ sub execute {
                 my @needed_names = @names;
                 if ( $opt->{first} ) {
                     my $first = ( keys %{$info_of} )[0];
-                    @needed_names = List::MoreUtils::PP::uniq( $first, @needed_names );
+                    @needed_names
+                        = List::MoreUtils::PP::uniq( $first, @needed_names );
                 }
 
                 if ( $opt->{required} ) {

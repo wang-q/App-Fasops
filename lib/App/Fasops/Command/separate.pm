@@ -11,9 +11,13 @@ use constant abstract => 'separate blocked fasta files by species';
 
 sub opt_spec {
     return (
-        [   "outdir|o=s", "Output location, [stdout] for screen, default is [.]", { default => '.' }
+        [   "outdir|o=s",
+            "Output location, [stdout] for screen, default is [.]",
+            { default => '.' }
         ],
-        [   "suffix|s=s", "Extensions of output files, default is [.fasta]", { default => '.fasta' }
+        [   "suffix|s=s",
+            "Extensions of output files, default is [.fasta]",
+            { default => '.fasta' }
         ],
         [ "rm|r",   "If outdir exists, remove it before operating" ],
         [ "rc",     "Revcom sequences when chr_strand is '-'" ],
@@ -24,21 +28,24 @@ sub opt_spec {
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infiles>";
+    $desc .= " <infile> [more infiles]";
     return $desc;
 }
 
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc
+        .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need one or more input files.") unless @{$args};
+    if ( !@{$args} ) {
+        $self->usage_error("This command need one or more input files.");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
@@ -82,18 +89,23 @@ sub execute {
                         $info->{seq} =~ tr/-//d;
                     }
                     if ( $opt->{rc} and $info->{chr_strand} ne "+" ) {
-                        $info->{seq}        = App::Fasops::Common::revcom( $info->{seq} );
+                        $info->{seq}
+                            = App::Fasops::Common::revcom( $info->{seq} );
                         $info->{chr_strand} = "+";
                     }
 
                     if ( lc( $opt->{outdir} ) eq "stdout" ) {
-                        print ">" . App::RL::Common::encode_header($info) . "\n";
+                        print ">"
+                            . App::RL::Common::encode_header($info) . "\n";
                         print $info->{seq} . "\n";
                     }
                     else {
                         my $outfile
-                            = Path::Tiny::path( $opt->{outdir}, $info->{name} . $opt->{suffix} );
-                        $outfile->append( ">" . App::RL::Common::encode_header($info) . "\n" );
+                            = Path::Tiny::path( $opt->{outdir},
+                            $info->{name} . $opt->{suffix} );
+                        $outfile->append( ">"
+                                . App::RL::Common::encode_header($info)
+                                . "\n" );
                         $outfile->append( $info->{seq} . "\n" );
                     }
                 }

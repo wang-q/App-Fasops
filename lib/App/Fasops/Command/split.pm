@@ -7,7 +7,8 @@ use App::Fasops -command;
 use App::RL::Common;
 use App::Fasops::Common;
 
-use constant abstract => 'split blocked fasta files to separate per-alignment files';
+use constant abstract =>
+    'split blocked fasta files to separate per-alignment files';
 
 sub opt_spec {
     return (
@@ -20,21 +21,24 @@ sub opt_spec {
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infiles>";
+    $desc .= " <infile> [more infiles]";
     return $desc;
 }
 
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc
+        .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need one or more input files.") unless @{$args};
+    if ( !@{$args} ) {
+        $self->usage_error("This command need one or more input files.");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
@@ -74,7 +78,8 @@ sub execute {
 
                 if ( lc( $opt->{outdir} ) eq "stdout" ) {
                     for my $key ( keys %{$info_of} ) {
-                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        printf ">%s\n",
+                            App::RL::Common::encode_header( $info_of->{$key} );
                         print $info_of->{$key}{seq} . "\n";
                     }
                 }
@@ -86,7 +91,8 @@ sub execute {
                         $filename .= '.fas';
                     }
                     else {
-                        $filename = App::RL::Common::encode_header( $info_of->{$target} );
+                        $filename = App::RL::Common::encode_header(
+                            $info_of->{$target} );
                         $filename =~ s/\|.+//;    # remove addtional fields
                         $filename =~ s/[\(\)\:]+/./g;
                         $filename .= '.fas';

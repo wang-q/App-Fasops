@@ -6,13 +6,17 @@ use autodie;
 use App::Fasops -command;
 use App::Fasops::Common;
 
-use constant abstract => 'scan blocked fasta files and output covers on chromosomes';
+use constant abstract =>
+    'scan blocked fasta files and output covers on chromosomes';
 
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "name|n=s",    "Only output this species." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [   "length|l=i",
+            "the threshold of alignment length, default is [1]",
+            { default => 1 }
+        ],
         [   "trim|t=i",
             "Trim align borders to avoid some overlaps in lastz results. Default is [0]",
             { default => 0 }
@@ -23,21 +27,23 @@ sub opt_spec {
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infiles>";
+    $desc .= " <infile> [more infiles]";
     return $desc;
 }
 
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfiles are blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need one or more input files.") unless @{$args};
+    if ( !@{$args} ) {
+        $self->usage_error("This command need one or more input files.");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
@@ -81,7 +87,8 @@ sub execute {
                 }
 
                 if ( $opt->{length} ) {
-                    next if length $info_of->{ $names[0] }{seq} < $opt->{length};
+                    next
+                        if length $info_of->{ $names[0] }{seq} < $opt->{length};
                 }
 
                 for my $key (@names) {
@@ -95,8 +102,10 @@ sub execute {
                         $count_of{$name}->{$chr_name} = AlignDB::IntSpan->new;
                     }
 
-                    my $intspan = AlignDB::IntSpan->new->add_pair( $info_of->{$key}{chr_start},
-                        $info_of->{$key}{chr_end} );
+                    my $intspan = AlignDB::IntSpan->new->add_pair(
+                        $info_of->{$key}{chr_start},
+                        $info_of->{$key}{chr_end}
+                    );
                     if ( $opt->{trim} ) {
                         $intspan = $intspan->trim( $opt->{trim} );
                     }
@@ -115,7 +124,8 @@ sub execute {
     # IntSpan to runlist
     for my $name ( keys %count_of ) {
         for my $chr_name ( keys %{ $count_of{$name} } ) {
-            $count_of{$name}->{$chr_name} = $count_of{$name}->{$chr_name}->runlist;
+            $count_of{$name}->{$chr_name}
+                = $count_of{$name}->{$chr_name}->runlist;
         }
     }
 

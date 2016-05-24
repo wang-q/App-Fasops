@@ -12,8 +12,11 @@ use constant abstract => 'extract alignment slices from a blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s",      "According to this species. Default is the first one." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "name|n=s", "According to this species. Default is the first one." ],
+        [   "length|l=i",
+            "the threshold of alignment length, default is [1]",
+            { default => 1 }
+        ],
     );
 }
 
@@ -27,7 +30,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc
+        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
     $desc .= "\t<runlist.yml> is a App::RL dump.\n";
     return $desc;
 }
@@ -35,8 +39,8 @@ sub description {
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    if (@{$args} != 2 ) {
-        $self->usage_error("This command need two input files.\nWe have @{$args}");
+    if ( @{$args} != 2 ) {
+        $self->usage_error("This command need two input files.");
     }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
@@ -45,7 +49,8 @@ sub validate_args {
     }
 
     if ( !exists $opt->{outfile} ) {
-        $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".slice.fas";
+        $opt->{outfile}
+            = Path::Tiny::path( $args->[0] )->absolute . ".slice.fas";
     }
 }
 
@@ -61,7 +66,8 @@ sub execute {
         open $out_fh, ">", $opt->{outfile};
     }
 
-    my $set_single = App::RL::Common::runlist2set( YAML::Syck::LoadFile( $args->[1] ) );
+    my $set_single
+        = App::RL::Common::runlist2set( YAML::Syck::LoadFile( $args->[1] ) );
 
     {
         my $content = '';    # content of one block
@@ -113,32 +119,40 @@ sub execute {
                 #                };
 
                 # target sequence intspan
-                my $target_seq_intspan = App::Fasops::Common::seq_intspan( $info_of->{$name}{seq} );
+                my $target_seq_intspan = App::Fasops::Common::seq_intspan(
+                    $info_of->{$name}{seq} );
 
                 # every sequence intspans
                 my %seq_intspan_of;
                 for my $key ( keys %{$info_of} ) {
                     $seq_intspan_of{$key}
-                        = App::Fasops::Common::seq_intspan( $info_of->{$key}{seq} );
+                        = App::Fasops::Common::seq_intspan(
+                        $info_of->{$key}{seq} );
                 }
 
                 # all indel regions
                 my $indel_intspan = AlignDB::IntSpan->new;
                 for my $key ( keys %{$info_of} ) {
                     $indel_intspan->add(
-                        App::Fasops::Common::indel_intspan( $info_of->{$key}{seq} ) );
+                        App::Fasops::Common::indel_intspan(
+                            $info_of->{$key}{seq}
+                        )
+                    );
                 }
 
                 # there may be more than one subslice intersect this alignment
                 my @sub_slices;
-                for my AlignDB::IntSpan $ss_chr_intspan ( $i_chr_intspan->sets ) {
+                for my AlignDB::IntSpan $ss_chr_intspan ( $i_chr_intspan->sets )
+                {
 
                     # chr positions to align positions
                     my $ss_start
-                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
+                        = App::Fasops::Common::chr_to_align(
+                        $target_seq_intspan,
                         $ss_chr_intspan->min, $chr_start, $chr_strand );
                     my $ss_end
-                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
+                        = App::Fasops::Common::chr_to_align(
+                        $target_seq_intspan,
                         $ss_chr_intspan->max, $chr_start, $chr_strand );
                     next if $ss_start >= $ss_end;
 
@@ -147,11 +161,13 @@ sub execute {
 
                     # borders of subslice inside a indel
                     if ( $indel_intspan->contains($ss_start) ) {
-                        my $indel_island = $indel_intspan->find_islands($ss_start);
+                        my $indel_island
+                            = $indel_intspan->find_islands($ss_start);
                         $ss_intspan->remove($indel_island);
                     }
                     if ( $indel_intspan->contains($ss_end) ) {
-                        my $indel_island = $indel_intspan->find_islands($ss_end);
+                        my $indel_island
+                            = $indel_intspan->find_islands($ss_end);
                         $ss_intspan->remove($indel_island);
                     }
                     next if $ss_intspan->size <= $opt->{length};
@@ -181,9 +197,14 @@ sub execute {
                             chr_start  => $key_start,
                             chr_end    => $key_end,
                         };
-                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header($ss_info);
+                        printf {$out_fh} ">%s\n",
+                            App::RL::Common::encode_header($ss_info);
                         printf {$out_fh} "%s\n",
-                            substr( $info_of->{$key}{seq}, $ss_start - 1, $ss_end - $ss_start + 1 );
+                            substr(
+                            $info_of->{$key}{seq},
+                            $ss_start - 1,
+                            $ss_end - $ss_start + 1
+                            );
                     }
                     print {$out_fh} "\n";
                 }

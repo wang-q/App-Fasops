@@ -12,21 +12,21 @@ use constant abstract => 'join multiple blocked fasta files by common target';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s",    "According to this species. Default is the first one." ],
+        [ "name|n=s", "According to this species. Default is the first one." ],
     );
 }
 
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infiles>";
+    $desc .= " <infile> [more infiles]";
     return $desc;
 }
 
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfiles are blocked fasta files, .fas.gz is supported.\n";
     return $desc;
 }
 
@@ -34,7 +34,7 @@ sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
     if ( !@{$args} ) {
-        $self->usage_error("This command need one or more input files.\nWe have @{$args}");
+        $self->usage_error("This command need one or more input files.");
     }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
@@ -43,7 +43,8 @@ sub validate_args {
     }
 
     if ( !exists $opt->{outfile} ) {
-        $opt->{outfile} = Path::Tiny::path( $args->[0] )->absolute . ".slice.fas";
+        $opt->{outfile}
+            = Path::Tiny::path( $args->[0] )->absolute . ".slice.fas";
     }
 }
 
@@ -79,10 +80,12 @@ sub execute {
                 }
 
                 # target name
-                my $header = App::RL::Common::encode_header( $info_of->{ $opt->{name} } );
+                my $header = App::RL::Common::encode_header(
+                    $info_of->{ $opt->{name} } );
 
                 if ( exists $block_of{$header} ) {
-                    my @other_names = grep { $_ ne $opt->{name} } keys %{$info_of};
+                    my @other_names
+                        = grep { $_ ne $opt->{name} } keys %{$info_of};
                     for my $name (@other_names) {
                         $block_of{$header}->{$name} = $info_of->{$name};
                     }
@@ -98,7 +101,7 @@ sub execute {
         $in_fh->close;
     }
 
-    for my $header (keys %block_of) {
+    for my $header ( keys %block_of ) {
         my $info_of = $block_of{$header};
 
         my @names = keys %{$info_of};

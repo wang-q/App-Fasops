@@ -12,28 +12,34 @@ use constant abstract => 'convert maf to blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [   "length|l=i",
+            "the threshold of alignment length, default is [1]",
+            { default => 1 }
+        ],
     );
 }
 
 sub usage_desc {
     my $self = shift;
     my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infile>";
+    $desc .= " <infiles> [more infiles]";
     return $desc;
 }
 
 sub description {
     my $desc;
-    $desc .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
-    $desc .= "\t<infiles> are paths to maf files, .maf.gz is supported\n";
+    $desc
+        .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
+    $desc .= "\tinfiles are paths to maf files, .maf.gz is supported\n";
     return $desc;
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    $self->usage_error("This command need one or more input files.") unless @{$args};
+    if ( !@{$args} ) {
+        $self->usage_error("This command need one or more input files.");
+    }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
@@ -76,12 +82,14 @@ sub execute {
 
                 for my $key (@names) {
                     my $info = $info_of->{$key};
-                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
-                    printf {$out_fh} "%s\n",  $info->{seq};
+                    printf {$out_fh} ">%s\n",
+                        App::RL::Common::encode_header($info);
+                    printf {$out_fh} "%s\n", $info->{seq};
                 }
                 print {$out_fh} "\n";
             }
-            elsif ( substr( $line, 0, 2 ) eq "s " ) {    # s line, contain info and seq
+            elsif ( substr( $line, 0, 2 ) eq "s " )
+            {    # s line, contain info and seq
                 $content .= $line;
             }
             else {
