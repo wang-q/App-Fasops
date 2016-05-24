@@ -20,17 +20,14 @@ sub opt_spec {
 }
 
 sub usage_desc {
-    my $self = shift;
-    my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infiles> [more infiles]";
-    return $desc;
+    return "fasops maf2fas [options] <infile> [more infiles]";
 }
 
 sub description {
     my $desc;
     $desc
         .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
-    $desc .= "\tinfiles are paths to maf files, .maf.gz is supported\n";
+    $desc .= "\tInfiles are paths to maf files, .maf.gz is supported\n";
     return $desc;
 }
 
@@ -38,7 +35,10 @@ sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
     if ( !@{$args} ) {
-        $self->usage_error("This command need one or more input files.");
+        my $message = "This command need one or more input files.\n\tIt found";
+        $message .= sprintf " [%s]", $_ for @{$args};
+        $message .= ".\n";
+        $self->usage_error($message);
     }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {

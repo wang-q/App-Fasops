@@ -10,14 +10,14 @@ use App::Fasops -command;
 use App::RL::Common;
 use App::Fasops::Common;
 
-use constant abstract => 'realign alignments';
+use constant abstract => 'realign blocked fasta file with external programs';
 
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "outgroup",    "Has outgroup at the end of blocks.", ],
         [   "parallel|p=i",
-            "run in parallel mode. Default is [1]",
+            "run in parallel mode. Default is [1].",
             { default => 1 },
         ],
         [   "msa=s",
@@ -27,26 +27,29 @@ sub opt_spec {
         [   "quick",
             "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
         ],
-        [ "pad=i", "In quick mode, enlarge indel regions", { default => 50 }, ],
-        [ "fill=i", "In quick mode, join indel regions", { default => 50 }, ],
+        [   "pad=i",
+            "In quick mode, enlarge indel regions. Default is [50].",
+            { default => 50 },
+        ],
+        [   "fill=i",
+            "In quick mode, join indel regions. Default is [50].",
+            { default => 50 },
+        ],
     );
 }
 
 sub usage_desc {
-    my $self = shift;
-    my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infile>";
-    return $desc;
+    return "fasops refine [options] <infile>";
 }
 
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= "List of msa:\n";
-    $desc .= " " x 4 . "mafft\n";
-    $desc .= " " x 4 . "muscle\n";
-    $desc .= " " x 4 . "clustalw\n";
-    $desc .= " " x 4 . "none:    means skip realigning\n";
+    $desc .= "\t* mafft\n";
+    $desc .= "\t* muscle\n";
+    $desc .= "\t* clustalw\n";
+    $desc .= "\t* none:\tmeans skip realigning\n";
 
     return $desc;
 }
@@ -55,7 +58,10 @@ sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
     if ( @{$args} != 1 ) {
-        $self->usage_error("This command need one input file.");
+        my $message = "This command need one input file.\n\tIt found";
+        $message .= sprintf " [%s]", $_ for @{$args};
+        $message .= ".\n";
+        $self->usage_error($message);
     }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {

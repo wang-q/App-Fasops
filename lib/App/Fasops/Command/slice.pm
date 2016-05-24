@@ -21,10 +21,7 @@ sub opt_spec {
 }
 
 sub usage_desc {
-    my $self = shift;
-    my $desc = $self->SUPER::usage_desc;    # "%c COMMAND %o"
-    $desc .= " <infile> <runlist.yml>";
-    return $desc;
+    return "fasops slice [options] <infile> <runlist.yml>";
 }
 
 sub description {
@@ -40,7 +37,10 @@ sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
     if ( @{$args} != 2 ) {
-        $self->usage_error("This command need two input files.");
+        my $message = "This command need two input files.\n\tIt found";
+        $message .= sprintf " [%s]", $_ for @{$args};
+        $message .= ".\n";
+        $self->usage_error($message);
     }
     for ( @{$args} ) {
         if ( !Path::Tiny::path($_)->is_file ) {
