@@ -42,7 +42,7 @@
             "App::RL" : "v0.2.14",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0.413",
-            "MCE" : "1.600",
+            "MCE" : "1.708",
             "Path::Tiny" : "0.076",
             "Tie::IxHash" : "1.23",
             "YAML::Syck" : "1.29",

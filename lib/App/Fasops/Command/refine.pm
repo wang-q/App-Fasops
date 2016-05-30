@@ -5,6 +5,7 @@ use autodie;
 
 use MCE;
 use MCE::Flow Sereal => 1;
+use MCE::Candy;
 
 use App::Fasops -command;
 use App::RL::Common;
@@ -21,7 +22,7 @@ sub opt_spec {
             { default => 1 },
         ],
         [   "msa=s",
-            "Aligning program. Default is [clustalw].",
+            "Aligning program. Default is [mafft].",
             { default => "mafft" },
         ],
         [   "quick",
@@ -80,7 +81,7 @@ sub execute {
     my $in_fh = IO::Zlib->new( $args->[0], "rb" );
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = *STDOUT;
+        $out_fh = \*STDOUT;
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -110,6 +111,7 @@ sub execute {
             $content .= $line;
         }
     }
+    $in_fh->close;
 
     if ( $opt->{parallel} >= 2 ) {
         my $worker = sub {
@@ -117,23 +119,21 @@ sub execute {
 
             my $info_of = $chunk_ref->[0];
             my $out_string = proc_block( $info_of, $opt );
-            MCE->gather($out_string);
+
+            # preserving output order
+            MCE->gather( $chunk_id, $out_string );
         };
 
         MCE::Flow::init {
             chunk_size  => 1,
             max_workers => $opt->{parallel},
+            gather      => MCE::Candy::out_iter_fh($out_fh),
         };
-        my @blocks = mce_flow $worker, @infos;
+        mce_flow $worker, \@infos;
         MCE::Flow::finish;
-
-        for my $block (@blocks) {
-            print {$out_fh} $block;
-        }
     }
 
     close $out_fh;
-    $in_fh->close;
 }
 
 sub proc_block {

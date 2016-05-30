@@ -1,7 +1,7 @@
 requires 'App::Cmd', '0.330';
 requires 'AlignDB::IntSpan', '1.0.7';
 requires 'List::MoreUtils', '0.413';
-requires 'MCE', '1.600';
+requires 'MCE', '1.708';
 requires 'IO::Zlib';
 requires 'Path::Tiny', '0.076';
 requires 'Tie::IxHash', '1.23';

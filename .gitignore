@@ -13,6 +13,9 @@ blib
 !META.json
 !LICENSE
 
+Build.bat
+MYMETA.json
+
 *.fa
 *.fas
 *.fasta
