@@ -70,7 +70,7 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+        my $in_fh = IO::Zlib->new( $infile, "rb" );
 
         my $content = '';    # content of one block
         while (1) {

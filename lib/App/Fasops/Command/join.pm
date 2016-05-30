@@ -53,7 +53,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = *STDOUT;
+        $out_fh = \*STDOUT;
     }
     else {
         open $out_fh, ">", $opt->{outfile};
