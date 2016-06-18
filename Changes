@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.4.7  2016-06-19 04:06:59 CST
+    - App::RL::Common::decode_header() changed
+
 0.4.6  2016-05-30 21:31:20 CST
     - Improve command refine following guides provided by Mario Roy.
 

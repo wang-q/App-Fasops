@@ -39,7 +39,7 @@
          "requires" : {
             "AlignDB::IntSpan" : "v1.0.7",
             "App::Cmd" : "0.330",
-            "App::RL" : "v0.2.14",
+            "App::RL" : "v0.2.23",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0.413",
             "MCE" : "1.708",
@@ -68,6 +68,6 @@
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
-   "version" : "0.4.6"
+   "version" : "0.4.7"
 }
 
