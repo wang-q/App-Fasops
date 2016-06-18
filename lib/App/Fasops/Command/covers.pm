@@ -93,7 +93,7 @@ sub execute {
 
                 for my $key (@names) {
                     my $name     = $info_of->{$key}{name};
-                    my $chr_name = $info_of->{$key}{chr_name};
+                    my $chr_name = $info_of->{$key}{chr};
 
                     if ( !exists $count_of{$name} ) {
                         $count_of{$name} = {};
@@ -102,10 +102,10 @@ sub execute {
                         $count_of{$name}->{$chr_name} = AlignDB::IntSpan->new;
                     }
 
-                    my $intspan = AlignDB::IntSpan->new->add_pair(
-                        $info_of->{$key}{chr_start},
-                        $info_of->{$key}{chr_end}
-                    );
+                    my $intspan
+                        = AlignDB::IntSpan->new->add_pair(
+                        $info_of->{$key}{start},
+                        $info_of->{$key}{end} );
                     if ( $opt->{trim} ) {
                         $intspan = $intspan->trim( $opt->{trim} );
                     }

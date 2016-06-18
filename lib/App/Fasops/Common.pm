@@ -93,8 +93,9 @@ sub parse_axt_block {
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
 
-    my (undef,         $first_chr,  $first_start,  $first_end, $second_chr,
-        $second_start, $second_end, $query_strand, undef,
+    my (undef,       $first_chr,    $first_start,
+        $first_end,  $second_chr,   $second_start,
+        $second_end, $query_strand, undef,
     ) = split /\s+/, $lines[0];
 
     if ( $query_strand eq "-" ) {
@@ -108,19 +109,19 @@ sub parse_axt_block {
     }
 
     my $info_refs = [
-        {   name       => "target",
-            chr_name   => $first_chr,
-            chr_start  => $first_start,
-            chr_end    => $first_end,
-            chr_strand => "+",
-            seq        => $lines[1],
+        {   name   => "target",
+            chr    => $first_chr,
+            start  => $first_start,
+            end    => $first_end,
+            strand => "+",
+            seq    => $lines[1],
         },
-        {   name       => "query",
-            chr_name   => $second_chr,
-            chr_start  => $second_start,
-            chr_end    => $second_end,
-            chr_strand => $query_strand,
-            seq        => $lines[2],
+        {   name   => "query",
+            chr    => $second_chr,
+            start  => $second_start,
+            end    => $second_end,
+            strand => $query_strand,
+            seq    => $lines[2],
         },
     ];
 
@@ -136,7 +137,8 @@ sub parse_maf_block {
     tie my %info_of, "Tie::IxHash";
 
     for my $sline (@lines) {
-        my ( undef, $src, $start, $size, $strand, undef, $text ) = split /\s+/, $sline;
+        my ( undef, $src, $start, $size, $strand, undef, $text ) = split /\s+/,
+            $sline;
 
         my ( $species, $chr_name ) = split /\./, $src;
         $chr_name = $species if !defined $chr_name;
@@ -145,12 +147,12 @@ sub parse_maf_block {
         $start = $start + 1;
 
         $info_of{$species} = {
-            name       => $species,
-            chr_name   => $chr_name,
-            chr_start  => $start,
-            chr_end    => $start + $size - 1,
-            chr_strand => $strand,
-            seq        => $text,
+            name   => $species,
+            chr    => $chr_name,
+            start  => $start,
+            end    => $start + $size - 1,
+            strand => $strand,
+            seq    => $text,
         };
     }
 
@@ -360,7 +362,11 @@ sub align_seqs_quick {
 
         my @segments;
         for my $i ( 0 .. $seq_count - 1 ) {
-            my $seg = substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1 );
+            my $seg = substr(
+                $aligned[$i],
+                $seg_start - 1,
+                $seg_end - $seg_start + 1
+            );
             push @segments, $seg;
         }
         my $realigned_segments = align_seqs( \@segments );
@@ -368,7 +374,11 @@ sub align_seqs_quick {
         for my $i ( 0 .. $seq_count - 1 ) {
             my $seg = $realigned_segments->[$i];
             $seg = uc $seg;
-            substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1, $seg );
+            substr(
+                $aligned[$i],
+                $seg_start - 1,
+                $seg_end - $seg_start + 1, $seg
+            );
         }
     }
 
@@ -403,7 +413,11 @@ sub trim_pure_dash {
         my $seg_end   = $span->[1];
 
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+            substr(
+                $seq_refs->[$i],
+                $seg_start - 1,
+                $seg_end - $seg_start + 1, ""
+            );
         }
     }
 
@@ -448,7 +462,11 @@ sub trim_outgroup {
         my $seg_end   = $span->[1];
 
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+            substr(
+                $seq_refs->[$i],
+                $seg_start - 1,
+                $seg_end - $seg_start + 1, ""
+            );
         }
     }
 
@@ -494,7 +512,11 @@ sub trim_complex_indel {
 
         # trim sequence, including outgroup
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
+            substr(
+                $seq_refs->[$i],
+                $seg_start - 1,
+                $seg_end - $seg_start + 1, ""
+            );
         }
 
         # add to complex_region
@@ -517,7 +539,8 @@ sub trim_complex_indel {
 
     # add ingroup-outgroup complex indels to complex_region
     for my $i (@ingroup_idx) {
-        my $outgroup_intersect_intspan = $outgroup_indel_intspan->intersect( $indel_intspans[$i] );
+        my $outgroup_intersect_intspan
+            = $outgroup_indel_intspan->intersect( $indel_intspans[$i] );
         for my $sub_out_set ( $outgroup_intersect_intspan->sets ) {
             for my $sub_union_set ( $union_set->sets ) {
 
@@ -689,7 +712,9 @@ sub multi_seq_stat {
     my $legnth = length $seq_refs->[0];
 
     # For every positions, search for polymorphism_site
-    my ( $comparable_bases, $identities, $differences, $gaps, $ns, $align_errors, ) = (0) x 6;
+    my ( $comparable_bases, $identities, $differences, $gaps, $ns,
+        $align_errors, )
+        = (0) x 6;
     for my $pos ( 1 .. $legnth ) {
         my @bases = ();
         for my $i ( 0 .. $seq_count - 1 ) {
@@ -717,8 +742,10 @@ sub multi_seq_stat {
     if ( $comparable_bases == 0 ) {
         print YAML::Syck::Dump { seqs => $seq_refs, };
         Carp::carp "number_of_comparable_bases == 0!!\n";
-        return [ $legnth, $comparable_bases, $identities, $differences, $gaps,
-            $ns, $legnth, undef, ];
+        return [
+            $legnth, $comparable_bases, $identities, $differences,
+            $gaps,   $ns,               $legnth,     undef,
+        ];
     }
 
     my @all_Ds;
@@ -731,8 +758,10 @@ sub multi_seq_stat {
 
     my $D = mean(@all_Ds);
 
-    return [ $legnth, $comparable_bases, $identities, $differences, $gaps,
-        $ns, $align_errors, $D, ];
+    return [
+        $legnth, $comparable_bases, $identities,   $differences,
+        $gaps,   $ns,               $align_errors, $D,
+    ];
 }
 
 # Give a chr position, return an align position starting from '1'.

@@ -90,10 +90,10 @@ sub execute {
                 my $name = $opt->{name};
 
                 # basic target information
-                my $chr_name   = $info_of->{$name}{chr_name};
-                my $chr_strand = $info_of->{$name}{chr_strand};
-                my $chr_start  = $info_of->{$name}{chr_start};
-                my $chr_end    = $info_of->{$name}{chr_end};
+                my $chr_name   = $info_of->{$name}{chr};
+                my $chr_strand = $info_of->{$name}{strand};
+                my $chr_start  = $info_of->{$name}{start};
+                my $chr_end    = $info_of->{$name}{end};
 
                 # chr present
                 next unless exists $set_single->{$chr_name};
@@ -182,20 +182,20 @@ sub execute {
                     for my $key ( keys %{$info_of} ) {
                         my $key_start = App::Fasops::Common::align_to_chr(
                             $seq_intspan_of{$key}, $ss_start,
-                            $info_of->{$key}{chr_start},
-                            $info_of->{$key}{chr_strand}
+                            $info_of->{$key}{start},
+                            $info_of->{$key}{strand}
                         );
                         my $key_end = App::Fasops::Common::align_to_chr(
                             $seq_intspan_of{$key}, $ss_end,
-                            $info_of->{$key}{chr_start},
-                            $info_of->{$key}{chr_strand}
+                            $info_of->{$key}{start},
+                            $info_of->{$key}{strand}
                         );
                         my $ss_info = {
-                            name       => $info_of->{$key}{name},
-                            chr_name   => $info_of->{$key}{chr_name},
-                            chr_strand => $info_of->{$key}{chr_strand},
-                            chr_start  => $key_start,
-                            chr_end    => $key_end,
+                            name   => $info_of->{$key}{name},
+                            chr    => $info_of->{$key}{chr},
+                            strand => $info_of->{$key}{strand},
+                            start  => $key_start,
+                            end    => $key_end,
                         };
                         printf {$out_fh} ">%s\n",
                             App::RL::Common::encode_header($ss_info);

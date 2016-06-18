@@ -88,10 +88,10 @@ sub execute {
                     if ( $opt->{nodash} ) {
                         $info->{seq} =~ tr/-//d;
                     }
-                    if ( $opt->{rc} and $info->{chr_strand} ne "+" ) {
+                    if ( $opt->{rc} and $info->{strand} ne "+" ) {
                         $info->{seq}
                             = App::Fasops::Common::revcom( $info->{seq} );
-                        $info->{chr_strand} = "+";
+                        $info->{strand} = "+";
                     }
 
                     if ( lc( $opt->{outdir} ) eq "stdout" ) {

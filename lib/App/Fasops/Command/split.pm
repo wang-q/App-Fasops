@@ -87,7 +87,7 @@ sub execute {
                     my $target = ( keys %{$info_of} )[0];
                     my $filename;
                     if ( $opt->{chr} ) {
-                        $filename = $info_of->{$target}{chr_name};
+                        $filename = $info_of->{$target}{chr};
                         $filename .= '.fas';
                     }
                     else {
