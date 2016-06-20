@@ -6,6 +6,9 @@ use strict;
 use warnings;
 use App::Cmd::Setup -app;
 
+# TODO: command chop
+# TODO: command create
+
 1;
 
 __END__
