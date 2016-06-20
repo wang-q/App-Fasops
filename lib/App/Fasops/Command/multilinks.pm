@@ -1,4 +1,4 @@
-package App::Fasops::Command::headers;
+package App::Fasops::Command::multilinks;
 use strict;
 use warnings;
 use autodie;
@@ -8,14 +8,14 @@ use App::RL::Common;
 use App::Fasops::Common;
 
 use constant abstract =>
-    'scan blocked fasta files and transform headers to ranges';
+    'scan blocked fasta files and output multilateral range links';
 
 sub opt_spec {
     return ( [ "outfile|o=s", "Output filename. [stdout] for screen." ], );
 }
 
 sub usage_desc {
-    return "fasops headers [options] <infile> [more infiles]";
+    return "fasops multilinks [options] <infile> [more infiles]";
 }
 
 sub description {
