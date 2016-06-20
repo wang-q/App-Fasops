@@ -12,4 +12,8 @@ $result = test_app( 'App::Fasops' => [qw(links t/example.fas -o stdout)] );
 is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 18, 'line count' );
 like( $result->stdout, qr{S288c.+\tYJM789}, 'name list' );
 
-done_testing(3);
+$result = test_app( 'App::Fasops' => [qw(links t/example.fas --best -o stdout)] );
+is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 9, 'line count' );
+like( $result->stdout, qr{S288c.+\tYJM789}, 'name list' );
+
+done_testing();
