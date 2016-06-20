@@ -8,10 +8,13 @@ use App::RL::Common;
 use App::Fasops::Common;
 
 use constant abstract =>
-    'scan blocked fasta files and output links between pieces';
+    'scan blocked fasta files and output bilateral range links';
 
 sub opt_spec {
-    return ( [ "outfile|o=s", "Output filename. [stdout] for screen." ], );
+    return (
+        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "best|b",      "best-to-best pairwise links" ],
+    );
 }
 
 sub usage_desc {
@@ -63,18 +66,60 @@ sub execute {
             next if substr( $line, 0, 1 ) eq "#";
 
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::Common::parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block( $content, 1 );
                 $content = '';
 
-                my @names = keys %{$info_of};
+                my @headers = keys %{$info_of};
 
-                for ( my $i = 0; $i <= $#names; $i++ ) {
-                    for ( my $j = $i + 1; $j <= $#names; $j++ ) {
-                        my $header1 = App::RL::Common::encode_header(
-                            $info_of->{ $names[$i] }, 1 );
-                        my $header2 = App::RL::Common::encode_header(
-                            $info_of->{ $names[$j] }, 1 );
-                        push @links, [ $header1, $header2 ];
+                if ( $opt->{best} ) {
+                    my @matrix = map { [ (undef) x ( scalar @headers ) ] }
+                        0 .. $#headers;
+
+                    # distance is 0 for same sequence
+                    for my $i ( 0 .. $#headers ) {
+                        $matrix[$i][$i] = 0;
+                    }
+
+                    # compute a triangle, fill full matrix
+                    for ( my $i = 0; $i <= $#headers; $i++ ) {
+                        for ( my $j = $i + 1; $j <= $#headers; $j++ ) {
+                            my $D = App::Fasops::Common::pair_D(
+                                [   $info_of->{ $headers[$i] }{seq},
+                                    $info_of->{ $headers[$j] }{seq},
+                                ]
+                            );
+                            $matrix[$i][$j] = $D;
+                            $matrix[$j][$i] = $D;
+                        }
+                    }
+
+                    # print YAML::Syck::Dump \@matrix;
+
+                    # best_pairwise
+                    my @pair_ary;
+                    for my $i ( 0 .. $#headers ) {
+                        my @row = @{ $matrix[$i] };
+                        $row[$i] = 999;   # remove the score (zero) of this item
+                        my $min = List::Util::min(@row);
+                        my $min_idx
+                            = List::MoreUtils::PP::firstidx { $_ == $min } @row;
+
+                        # to remove duplications of a:b and b:a
+                        push @pair_ary, join ":",
+                            sort { $a <=> $b } ( $i, $min_idx );
+                    }
+                    @pair_ary = List::MoreUtils::PP::uniq(@pair_ary);
+
+                    for (@pair_ary) {
+                        my ( $i, $j ) = split ":";
+                        push @links, [ $headers[$i], $headers[$j] ];
+                    }
+                }
+                else {
+                    for ( my $i = 0; $i <= $#headers; $i++ ) {
+                        for ( my $j = $i + 1; $j <= $#headers; $j++ ) {
+                            push @links, [ $headers[$i], $headers[$j] ];
+                        }
                     }
                 }
             }

@@ -34,7 +34,8 @@ sub read_replaces {
 }
 
 sub parse_block {
-    my $block = shift;
+    my $block     = shift;
+    my $want_full = shift;
 
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "Numbers of headers not equal to seqs\n" if @lines % 2;
@@ -50,12 +51,12 @@ sub parse_block {
 
         my $info_ref = App::RL::Common::decode_header($header);
         $info_ref->{seq} = $seq;
-        if ( defined $info_ref->{name} ) {
-            $info_of{ $info_ref->{name} } = $info_ref;
-        }
-        else {
+        if ( $want_full or !defined $info_ref->{name} ) {
             my $ess_header = App::RL::Common::encode_header( $info_ref, 1 );
             $info_of{$ess_header} = $info_ref;
+        }
+        else {
+            $info_of{ $info_ref->{name} } = $info_ref;
         }
     }
 
