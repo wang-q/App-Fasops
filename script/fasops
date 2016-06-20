@@ -30,6 +30,8 @@ perl -I lib/ script/fasops axt2fas t/example.axt -o stdout
 perl -I lib/ script/fasops maf2fas t/example.maf -o stdout
 
 perl -I lib/ script/fasops links t/example.fas -o stdout
+perl -I lib/ script/fasops headers t/example.fas -o stdout
+
 perl -I lib/ script/fasops replace t/example.fas t/replace.tsv -o stdout
 
 perl -I lib/ script/fasops refine t/example.fas --msa mafft -o stdout
