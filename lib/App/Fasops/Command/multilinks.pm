@@ -64,11 +64,10 @@ sub execute {
             next if substr( $line, 0, 1 ) eq "#";
 
             if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_of = App::Fasops::Common::parse_block($content);
+                my $info_of = App::Fasops::Common::parse_block( $content, 1 );
                 $content = '';
 
-                my @headers = map { App::RL::Common::encode_header(
-                        $info_of->{$_}, 1 ) } keys %{$info_of};
+                my @headers = keys %{$info_of};
                 push @links, \@headers;
             }
             else {
