@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.4.9  2016-06-25 22:03:35 CST
+    - Merge command multilinks into links
+
 0.4.8  2016-06-21 06:11:14 CST
     - Add --best to command links
     - Command multilinks
