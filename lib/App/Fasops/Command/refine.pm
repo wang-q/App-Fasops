@@ -246,7 +246,7 @@ sub trim_head_tail {
                     my $base = substr( $info_of->{$key}{seq}, 0, 1, '' );
                     if ( $base ne '-' ) {
                         if ( $info_of->{$key}{strand} eq "+" ) {
-                            $info_of->{$key}{start}--;
+                            $info_of->{$key}{start}++;
                         }
                         else {
                             $info_of->{$key}{end}--;
@@ -272,7 +272,7 @@ sub trim_head_tail {
                             $info_of->{$key}{end}--;
                         }
                         else {
-                            $info_of->{$key}{start}--;
+                            $info_of->{$key}{start}++;
                         }
                     }
                 }
