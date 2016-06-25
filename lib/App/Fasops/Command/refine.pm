@@ -36,6 +36,10 @@ sub opt_spec {
             "In quick mode, join indel regions. Default is [50].",
             { default => 50 },
         ],
+        [   "chop=i",
+            "Chop head and tail indels. Default is [0].",
+            { default => 0 },
+        ],
     );
 }
 
@@ -96,7 +100,7 @@ sub execute {
             $line = $in_fh->getline;
         }
         if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-            my $info_of = App::Fasops::Common::parse_block($content);
+            my $info_of = App::Fasops::Common::parse_block($content, 1);
             $content = '';
 
             if ( $opt->{parallel} >= 2 ) {
@@ -140,46 +144,151 @@ sub proc_block {
     my $info_of = shift;
     my $opt     = shift;
 
-    my @keys     = keys %{$info_of};
-    my $seq_refs = [];
-    for my $key (@keys) {
-        push @{$seq_refs}, $info_of->{$key}{seq};
+    #----------------------------#
+    # processing seqs, leave headers untouched
+    #----------------------------#
+    {
+        my @keys     = keys %{$info_of};
+        my $seq_refs = [];
+        for my $key (@keys) {
+            push @{$seq_refs}, $info_of->{$key}{seq};
+        }
+
+        #----------------------------#
+        # realigning
+        #----------------------------#
+        if ( $opt->{msa} ne "none" ) {
+            if ( $opt->{quick} ) {
+                $seq_refs
+                    = App::Fasops::Common::align_seqs_quick( $seq_refs,
+                    $opt->{msa}, $opt->{pad}, $opt->{fill} );
+            }
+            else {
+                $seq_refs
+                    = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
+            }
+        }
+
+        #----------------------------#
+        # trimming
+        #----------------------------#
+        App::Fasops::Common::trim_pure_dash($seq_refs);
+        if ( $opt->{outgroup} ) {
+            App::Fasops::Common::trim_outgroup($seq_refs);
+            App::Fasops::Common::trim_complex_indel($seq_refs);
+        }
+
+        for my $i ( 0 .. $#keys ) {
+            $info_of->{ $keys[$i] }{seq} = uc $seq_refs->[$i];
+        }
     }
 
     #----------------------------#
-    # realigning
+    # change headers
     #----------------------------#
-    if ( $opt->{msa} ne "none" ) {
-        if ( $opt->{quick} ) {
-            $seq_refs
-                = App::Fasops::Common::align_seqs_quick( $seq_refs,
-                $opt->{msa}, $opt->{pad}, $opt->{fill} );
-        }
-        else {
-            $seq_refs
-                = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
-        }
-    }
-
-    #----------------------------#
-    # trimming
-    #----------------------------#
-    App::Fasops::Common::trim_pure_dash($seq_refs);
-    if ( $opt->{outgroup} ) {
-        App::Fasops::Common::trim_outgroup($seq_refs);
-        App::Fasops::Common::trim_complex_indel($seq_refs);
+    if ( $opt->{chop} ) {
+        trim_head_tail( $info_of, $opt->{chop} );
     }
 
     my $out_string;
 
-    for my $i ( 0 .. $#keys ) {
+    for my $key ( keys %{$info_of} ) {
         $out_string .= sprintf ">%s\n",
-            App::RL::Common::encode_header( $info_of->{ $keys[$i] } );
-        $out_string .= sprintf "%s\n", uc $seq_refs->[$i];
+            App::RL::Common::encode_header( $info_of->{$key} );
+        $out_string .= sprintf "%s\n", $info_of->{$key}{seq};
     }
     $out_string .= "\n";
 
     return $out_string;
+}
+
+#----------------------------#
+# trim head and tail indels
+#----------------------------#
+#  If head length set to 1, the first indel will be trimmed
+#  Length set to 5 and the second indel will also be trimmed
+#   GAAA--C...
+#   --AAAGC...
+#   GAAAAGC...
+sub trim_head_tail {
+    my $info_of     = shift;
+    my $chop_length = shift;    # indels in this region will also be trimmed
+
+    # default value means only trimming indels starting at the first base
+    $chop_length = defined $chop_length ? $chop_length : 1;
+
+    my @keys = keys %{$info_of};
+    my $align_length = length $info_of->{ $keys[0] }{seq};
+
+    # chop region covers all
+    return if $chop_length * 2 >= $align_length;
+
+    my $indel_set = AlignDB::IntSpan->new;
+    for my $key (@keys) {
+        my $seq_indel_set
+            = App::Fasops::Common::indel_intspan( $info_of->{$key}{seq} );
+        $indel_set->merge($seq_indel_set);
+    }
+
+    # There're no indels at all
+    # Leave $info_of untouched
+    return if $indel_set->is_empty;
+
+    {    # head indel(s) to be trimmed
+        my $head_set = AlignDB::IntSpan->new;
+        $head_set->add_pair( 1, $chop_length );
+        my $head_indel_set = $indel_set->find_islands($head_set);
+
+        # head indels
+        if ( $head_indel_set->is_not_empty ) {
+            for my $i ( 1 .. $head_indel_set->max ) {
+                for my $key (@keys) {
+                    my $base = substr( $info_of->{$key}{seq}, 0, 1, '' );
+                    if ( $base ne '-' ) {
+                        if ( $info_of->{$key}{strand} eq "+" ) {
+                            $info_of->{$key}{start}--;
+                        }
+                        else {
+                            $info_of->{$key}{end}--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    {    # tail indel(s) to be trimmed
+        my $tail_set = AlignDB::IntSpan->new;
+        $tail_set->add_range( $align_length - $chop_length + 1, $align_length );
+        my $tail_indel_set = $indel_set->find_islands($tail_set);
+
+        # tail indels
+        if ( $tail_indel_set->is_not_empty ) {
+            for my $i ( $tail_indel_set->min .. $align_length ) {
+                for my $key (@keys) {
+                    my $base = substr( $info_of->{$key}{seq}, -1, 1, '' );
+                    if ( $base ne '-' ) {
+                        if ( $info_of->{$key}{strand} eq "+" ) {
+                            $info_of->{$key}{end}--;
+                        }
+                        else {
+                            $info_of->{$key}{start}--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    # create new $info_of
+    my $new_info_of = {};
+    for my $key (@keys) {
+        my $info    = $info_of->{$key};
+        my $new_key = App::RL::Common::encode_header($info);
+        $new_info_of->{$new_key} = $info;
+    }
+
+    $info_of = $new_info_of;
 }
 
 1;

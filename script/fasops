@@ -13,7 +13,7 @@ For help with App::Fasops, run "fasops help"
 
 __END__
 
-perl -I lib/ script/fasops
+perl -I lib/ script/fasops help
 
 perl -I lib/ script/fasops names t/example.fas -c -o stdout
 
@@ -36,6 +36,7 @@ perl -I lib/ script/fasops links t/example.fas --pair -o stdout
 perl -I lib/ script/fasops replace t/example.fas t/replace.tsv -o stdout
 
 perl -I lib/ script/fasops refine t/example.fas --msa mafft -o stdout
+perl -I lib/ script/fasops refine t/example.fas --msa none --chop 10 -o stdout
 
 perl -I lib script/fasops slice t/slice.fas t/slice.yml --name S288c
 
