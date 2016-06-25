@@ -17,10 +17,11 @@ App::Fasops - operating blocked fasta files
 
        axt2fas: convert axt to blocked fasta
         covers: scan blocked fasta files and output covers on chromosomes
-         links: scan blocked fasta files and output links between pieces
+          join: join multiple blocked fasta files by common target
+         links: scan blocked fasta files and output bi/multi-lateral range links
        maf2fas: convert maf to blocked fasta
          names: scan blocked fasta files and output all species names
-        refine: realign alignments
+        refine: realign blocked fasta file with external programs
        replace: replace headers from a blocked fasta
       separate: separate blocked fasta files by species
          slice: extract alignment slices from a blocked fasta

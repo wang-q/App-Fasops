@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.4.10  2016-06-26 03:20:10 CST
+    - Add --chop to command refine
+
 0.4.9  2016-06-25 22:03:35 CST
     - Merge command multilinks into links
 
