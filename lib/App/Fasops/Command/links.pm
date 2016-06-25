@@ -8,11 +8,12 @@ use App::RL::Common;
 use App::Fasops::Common;
 
 use constant abstract =>
-    'scan blocked fasta files and output bilateral range links';
+    'scan blocked fasta files and output bi/multi-lateral range links';
 
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "pair|p",      "pairwise links" ],
         [ "best|b",      "best-to-best pairwise links" ],
     );
 }
@@ -115,12 +116,15 @@ sub execute {
                         push @links, [ $headers[$i], $headers[$j] ];
                     }
                 }
-                else {
+                elsif ( $opt->{pair} ) {
                     for ( my $i = 0; $i <= $#headers; $i++ ) {
                         for ( my $j = $i + 1; $j <= $#headers; $j++ ) {
                             push @links, [ $headers[$i], $headers[$j] ];
                         }
                     }
+                }
+                else {
+                    push @links, \@headers;
                 }
             }
             else {
@@ -140,7 +144,8 @@ sub execute {
     }
 
     for my $link (@links) {
-        printf {$out_fh} "%s\t%s\n", $link->[0], $link->[1];
+        printf {$out_fh} join( "\t", @{$link} );
+        printf {$out_fh} "\n";
     }
     close $out_fh;
 }
