@@ -558,29 +558,38 @@ sub trim_complex_indel {
 
 # read normal fasta files
 sub read_fasta {
-    my $filename = shift;
+    my $infile = shift;
 
-    tie my %seq_of, "Tie::IxHash";
+    my ( @names, %seqs );
 
-    my $in_fh = path($filename)->openr;
+    my $in_fh = IO::Zlib->new( $infile, "rb" );
 
     my $cur_name;
-    while ( my $line = <$in_fh> ) {
+    while ( my $line = $in_fh->getline ) {
         chomp $line;
-        if ( $line =~ /^\>\S+/ ) {
-            $line =~ s/\>//;
-            $cur_name = $line;
-            $seq_of{$cur_name} = '';
+        if ( $line eq '' or substr( $line, 0, 1 ) eq " " ) {
+            next;
         }
-        elsif ( $line =~ /^[\w-]+/ ) {
-            $seq_of{$cur_name} .= $line;
+        elsif ( substr( $line, 0, 1 ) eq "#" ) {
+            next;
         }
-        else {    # Blank line, do nothing
+        elsif ( substr( $line, 0, 1 ) eq ">" ) {
+            ($cur_name) = split /\s+/, $line;
+            $cur_name =~ s/^>//;
+            push @names, $cur_name;
+            $seqs{$cur_name} = '';
         }
-
+        else {
+            $seqs{$cur_name} .= $line;
+        }
     }
 
-    close $in_fh;
+    $in_fh->close;
+
+    tie my %seq_of, "Tie::IxHash";
+    for my $name (@names) {
+        $seq_of{$name} = $seqs{$name};
+    }
     return \%seq_of;
 }
 
