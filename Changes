@@ -1,6 +1,7 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+    - Add codecov badge
 
 0.4.12  2016-06-30 16:35:03 CST
     - Speed up Common::read_fasta()

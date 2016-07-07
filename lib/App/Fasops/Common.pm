@@ -395,6 +395,8 @@ sub trim_pure_dash {
     my $seq_count  = @{$seq_refs};
     my $seq_length = length $seq_refs->[0];
 
+    return unless $seq_length;
+
     my $trim_region = AlignDB::IntSpan->new;
 
     for my $pos ( 1 .. $seq_length ) {

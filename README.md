@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/wang-q/App-Fasops.svg?branch=master)](https://travis-ci.org/wang-q/App-Fasops)
+[![codecov](https://codecov.io/gh/wang-q/App-Fasops/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/App-Fasops)
 [![Cpan version](https://img.shields.io/cpan/v/App-Fasops.svg)](https://metacpan.org/release/App-Fasops)
 
 # NAME
