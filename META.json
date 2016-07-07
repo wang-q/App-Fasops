@@ -68,7 +68,7 @@
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
-   "version" : "0.4.12",
+   "version" : "0.4.13",
    "x_serialization_backend" : "JSON::XS version 3.01"
 }
 

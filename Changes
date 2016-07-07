@@ -1,6 +1,8 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+
+0.4.13  2016-07-07 22:32:08 CST
     - Add codecov badge
 
 0.4.12  2016-06-30 16:35:03 CST

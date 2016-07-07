@@ -1,6 +1,6 @@
 package App::Fasops;
 
-our $VERSION = '0.4.12';
+our $VERSION = '0.4.13';
 
 use strict;
 use warnings;
