@@ -16,15 +16,19 @@ __END__
 perl -I lib/ script/fasops help
 
 perl -I lib/ script/fasops names t/example.fas -c -o stdout
+cat t/example.fas | perl -I lib/ script/fasops names stdin -c -o stdout
 
 perl -I lib/ script/fasops subset t/example.fas t/example.name.list -o stdout
+cat t/example.fas | perl -I lib/ script/fasops subset stdin t/example.name.list -o stdout
 
 perl -I lib/ t/04-subset.t
 
 perl -I lib/ script/fasops separate t/example.fas --nodash --rc
 perl -I lib/ script/fasops separate t/example.fas --nodash --rc -o stdout
+cat t/example.fas | perl -I lib/ script/fasops separate stdin --nodash --rc -o stdout
 
 perl -I lib/ script/fasops covers t/example.fas -o stdout -n S288c
+cat t/example.fas | perl -I lib/ script/fasops covers stdin -o stdout -n S288c
 
 perl -I lib/ script/fasops axt2fas t/example.axt -o stdout
 perl -I lib/ script/fasops maf2fas t/example.maf -o stdout

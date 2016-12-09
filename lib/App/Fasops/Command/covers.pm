@@ -6,17 +6,13 @@ use autodie;
 use App::Fasops -command;
 use App::Fasops::Common;
 
-use constant abstract =>
-    'scan blocked fasta files and output covers on chromosomes';
+use constant abstract => 'scan blocked fasta files and output covers on chromosomes';
 
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "name|n=s",    "Only output this species." ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
         [   "trim|t=i",
             "Trim align borders to avoid some overlaps in lastz results. Default is [0]",
             { default => 0 }
@@ -31,7 +27,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\tInfiles are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -45,6 +42,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -60,7 +58,13 @@ sub execute {
 
     my %count_of;    # YAML::Sync can't Dump tied hashes
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -102,9 +106,7 @@ sub execute {
                         $count_of{$name}->{$chr_name} = AlignDB::IntSpan->new;
                     }
 
-                    my $intspan
-                        = AlignDB::IntSpan->new->add_pair(
-                        $info_of->{$key}{start},
+                    my $intspan = AlignDB::IntSpan->new->add_pair( $info_of->{$key}{start},
                         $info_of->{$key}{end} );
                     if ( $opt->{trim} ) {
                         $intspan = $intspan->trim( $opt->{trim} );
@@ -131,7 +133,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};

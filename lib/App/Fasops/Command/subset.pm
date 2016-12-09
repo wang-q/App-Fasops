@@ -24,12 +24,10 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc
-        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
-    $desc
-        .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
-    $desc
-        .= "\tNames in the output file will following the order in <name.list>.\n";
+    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
+    $desc .= "\t<name.list> is a file with a list of names to keep, one per line.\n";
+    $desc .= "\tNames in the output file will following the order in <name.list>.\n";
     return $desc;
 }
 
@@ -43,6 +41,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -58,10 +57,17 @@ sub execute {
 
     my @names = @{ App::RL::Common::read_names( $args->[1] ) };
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    my $in_fh;
+    if ( lc $args->[0] eq "stdin" ) {
+        $in_fh = *STDIN{IO};
+    }
+    else {
+        $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    }
+
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -82,8 +88,7 @@ sub execute {
                 my @needed_names = @names;
                 if ( $opt->{first} ) {
                     my $first = ( keys %{$info_of} )[0];
-                    @needed_names
-                        = List::MoreUtils::PP::uniq( $first, @needed_names );
+                    @needed_names = List::MoreUtils::PP::uniq( $first, @needed_names );
                 }
 
                 if ( $opt->{required} ) {

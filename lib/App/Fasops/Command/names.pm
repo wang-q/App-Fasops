@@ -6,8 +6,7 @@ use autodie;
 use App::Fasops -command;
 use App::Fasops::Common;
 
-use constant abstract =>
-    'scan blocked fasta files and output all species names';
+use constant abstract => 'scan blocked fasta files and output all species names';
 
 sub opt_spec {
     return (
@@ -24,6 +23,7 @@ sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -37,6 +37,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -52,7 +53,13 @@ sub execute {
 
     tie my %count_of, "Tie::IxHash";
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -80,7 +87,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
