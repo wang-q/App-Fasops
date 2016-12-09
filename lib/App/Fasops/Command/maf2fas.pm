@@ -12,10 +12,7 @@ use constant abstract => 'convert maf to blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
     );
 }
 
@@ -25,9 +22,9 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc
-        .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
-    $desc .= "\tInfiles are paths to maf files, .maf.gz is supported\n";
+    $desc .= "Convert UCSC maf multiple alignment file to blocked fasta file.\n";
+    $desc .= "\t<infiles> are paths to maf files, .maf.gz is supported\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -41,6 +38,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -56,14 +54,20 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
     }
 
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -82,14 +86,12 @@ sub execute {
 
                 for my $key (@names) {
                     my $info = $info_of->{$key};
-                    printf {$out_fh} ">%s\n",
-                        App::RL::Common::encode_header($info);
-                    printf {$out_fh} "%s\n", $info->{seq};
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
+                    printf {$out_fh} "%s\n",  $info->{seq};
                 }
                 print {$out_fh} "\n";
             }
-            elsif ( substr( $line, 0, 2 ) eq "s " )
-            {    # s line, contain info and seq
+            elsif ( substr( $line, 0, 2 ) eq "s " ) {    # s line, contain info and seq
                 $content .= $line;
             }
             else {

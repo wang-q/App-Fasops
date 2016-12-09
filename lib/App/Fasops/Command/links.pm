@@ -7,8 +7,7 @@ use App::Fasops -command;
 use App::RL::Common;
 use App::Fasops::Common;
 
-use constant abstract =>
-    'scan blocked fasta files and output bi/multi-lateral range links';
+use constant abstract => 'scan blocked fasta files and output bi/multi-lateral range links';
 
 sub opt_spec {
     return (
@@ -25,8 +24,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc
-        .= "\tinfiles are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -40,6 +39,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -55,7 +55,13 @@ sub execute {
 
     my @links;
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -73,8 +79,7 @@ sub execute {
                 my @headers = keys %{$info_of};
 
                 if ( $opt->{best} ) {
-                    my @matrix = map { [ (undef) x ( scalar @headers ) ] }
-                        0 .. $#headers;
+                    my @matrix = map { [ (undef) x ( scalar @headers ) ] } 0 .. $#headers;
 
                     # distance is 0 for same sequence
                     for my $i ( 0 .. $#headers ) {
@@ -100,14 +105,12 @@ sub execute {
                     my @pair_ary;
                     for my $i ( 0 .. $#headers ) {
                         my @row = @{ $matrix[$i] };
-                        $row[$i] = 999;   # remove the score (zero) of this item
+                        $row[$i] = 999;    # remove the score (zero) of this item
                         my $min = List::Util::min(@row);
-                        my $min_idx
-                            = List::MoreUtils::PP::firstidx { $_ == $min } @row;
+                        my $min_idx = List::MoreUtils::PP::firstidx { $_ == $min } @row;
 
                         # to remove duplications of a:b and b:a
-                        push @pair_ary, join ":",
-                            sort { $a <=> $b } ( $i, $min_idx );
+                        push @pair_ary, join ":", sort { $a <=> $b } ( $i, $min_idx );
                     }
                     @pair_ary = List::MoreUtils::PP::uniq(@pair_ary);
 
@@ -137,7 +140,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};

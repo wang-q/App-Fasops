@@ -12,11 +12,8 @@ use constant abstract => 'extract alignment slices from a blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s", "According to this species. Default is the first one." ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
+        [ "name|n=s",    "According to this species. Default is the first one." ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
     );
 }
 
@@ -27,8 +24,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc
-        .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "\t<infile> is the path to blocked fasta file, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     $desc .= "\t<runlist.yml> is a App::RL dump.\n";
     return $desc;
 }
@@ -43,6 +40,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -57,10 +55,17 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    my $in_fh;
+    if ( lc $args->[0] eq "stdin" ) {
+        $in_fh = *STDIN{IO};
+    }
+    else {
+        $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    }
+
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -109,50 +114,42 @@ sub execute {
                 }
                 next if $i_chr_intspan->is_empty;
 
-                #                print YAML::Syck::Dump {
-                #                    name          => $name,
-                #                    chr_name      => $chr_name,
-                #                    chr_strand    => $chr_strand,
-                #                    chr_start     => $chr_start,
-                #                    chr_end       => $chr_end,
-                #                    i_chr_intspan => $i_chr_intspan->runlist,
-                #                };
+                # print YAML::Syck::Dump {
+                #     name          => $name,
+                #     chr_name      => $chr_name,
+                #     chr_strand    => $chr_strand,
+                #     chr_start     => $chr_start,
+                #     chr_end       => $chr_end,
+                #     i_chr_intspan => $i_chr_intspan->runlist,
+                # };
 
                 # target sequence intspan
-                my $target_seq_intspan = App::Fasops::Common::seq_intspan(
-                    $info_of->{$name}{seq} );
+                my $target_seq_intspan = App::Fasops::Common::seq_intspan( $info_of->{$name}{seq} );
 
                 # every sequence intspans
                 my %seq_intspan_of;
                 for my $key ( keys %{$info_of} ) {
                     $seq_intspan_of{$key}
-                        = App::Fasops::Common::seq_intspan(
-                        $info_of->{$key}{seq} );
+                        = App::Fasops::Common::seq_intspan( $info_of->{$key}{seq} );
                 }
 
                 # all indel regions
                 my $indel_intspan = AlignDB::IntSpan->new;
                 for my $key ( keys %{$info_of} ) {
                     $indel_intspan->add(
-                        App::Fasops::Common::indel_intspan(
-                            $info_of->{$key}{seq}
-                        )
-                    );
+                        App::Fasops::Common::indel_intspan( $info_of->{$key}{seq} ) );
                 }
 
                 # there may be more than one subslice intersect this alignment
                 my @sub_slices;
-                for my AlignDB::IntSpan $ss_chr_intspan ( $i_chr_intspan->sets )
-                {
+                for my AlignDB::IntSpan $ss_chr_intspan ( $i_chr_intspan->sets ) {
 
                     # chr positions to align positions
                     my $ss_start
-                        = App::Fasops::Common::chr_to_align(
-                        $target_seq_intspan,
+                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
                         $ss_chr_intspan->min, $chr_start, $chr_strand );
                     my $ss_end
-                        = App::Fasops::Common::chr_to_align(
-                        $target_seq_intspan,
+                        = App::Fasops::Common::chr_to_align( $target_seq_intspan,
                         $ss_chr_intspan->max, $chr_start, $chr_strand );
                     next if $ss_start >= $ss_end;
 
@@ -161,13 +158,11 @@ sub execute {
 
                     # borders of subslice inside a indel
                     if ( $indel_intspan->contains($ss_start) ) {
-                        my $indel_island
-                            = $indel_intspan->find_islands($ss_start);
+                        my $indel_island = $indel_intspan->find_islands($ss_start);
                         $ss_intspan->remove($indel_island);
                     }
                     if ( $indel_intspan->contains($ss_end) ) {
-                        my $indel_island
-                            = $indel_intspan->find_islands($ss_end);
+                        my $indel_island = $indel_intspan->find_islands($ss_end);
                         $ss_intspan->remove($indel_island);
                     }
                     next if $ss_intspan->size <= $opt->{length};
@@ -197,14 +192,9 @@ sub execute {
                             start  => $key_start,
                             end    => $key_end,
                         };
-                        printf {$out_fh} ">%s\n",
-                            App::RL::Common::encode_header($ss_info);
+                        printf {$out_fh} ">%s\n", App::RL::Common::encode_header($ss_info);
                         printf {$out_fh} "%s\n",
-                            substr(
-                            $info_of->{$key}{seq},
-                            $ss_start - 1,
-                            $ss_end - $ss_start + 1
-                            );
+                            substr( $info_of->{$key}{seq}, $ss_start - 1, $ss_end - $ss_start + 1 );
                     }
                     print {$out_fh} "\n";
                 }

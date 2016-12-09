@@ -17,29 +17,14 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "outgroup",    "Has outgroup at the end of blocks.", ],
-        [   "parallel|p=i",
-            "run in parallel mode. Default is [1].",
-            { default => 1 },
-        ],
-        [   "msa=s",
-            "Aligning program. Default is [mafft].",
-            { default => "mafft" },
-        ],
+        [ "parallel|p=i", "run in parallel mode. Default is [1].", { default => 1 }, ],
+        [ "msa=s",        "Aligning program. Default is [mafft].", { default => "mafft" }, ],
         [   "quick",
             "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
         ],
-        [   "pad=i",
-            "In quick mode, enlarge indel regions. Default is [50].",
-            { default => 50 },
-        ],
-        [   "fill=i",
-            "In quick mode, join indel regions. Default is [50].",
-            { default => 50 },
-        ],
-        [   "chop=i",
-            "Chop head and tail indels. Default is [0].",
-            { default => 0 },
-        ],
+        [ "pad=i",  "In quick mode, enlarge indel regions. Default is [50].", { default => 50 }, ],
+        [ "fill=i", "In quick mode, join indel regions. Default is [50].",    { default => 50 }, ],
+        [ "chop=i", "Chop head and tail indels. Default is [0].",             { default => 0 }, ],
     );
 }
 
@@ -55,6 +40,8 @@ sub description {
     $desc .= "\t* muscle\n";
     $desc .= "\t* clustalw\n";
     $desc .= "\t* none:\tmeans skip realigning\n";
+    $desc .= "\t<infile> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
 
     return $desc;
 }
@@ -69,6 +56,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -82,10 +70,17 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    my $in_fh;
+    if ( lc $args->[0] eq "stdin" ) {
+        $in_fh = *STDIN{IO};
+    }
+    else {
+        $in_fh = IO::Zlib->new( $args->[0], "rb" );
+    }
+
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -100,7 +95,7 @@ sub execute {
             $line = $in_fh->getline;
         }
         if ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-            my $info_of = App::Fasops::Common::parse_block($content, 1);
+            my $info_of = App::Fasops::Common::parse_block( $content, 1 );
             $content = '';
 
             if ( $opt->{parallel} >= 2 ) {
@@ -164,8 +159,7 @@ sub proc_block {
                     $opt->{msa}, $opt->{pad}, $opt->{fill} );
             }
             else {
-                $seq_refs
-                    = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
+                $seq_refs = App::Fasops::Common::align_seqs( $seq_refs, $opt->{msa} );
             }
         }
 
@@ -193,9 +187,8 @@ sub proc_block {
     my $out_string;
 
     for my $key ( keys %{$info_of} ) {
-        $out_string .= sprintf ">%s\n",
-            App::RL::Common::encode_header( $info_of->{$key} );
-        $out_string .= sprintf "%s\n", $info_of->{$key}{seq};
+        $out_string .= sprintf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+        $out_string .= sprintf "%s\n",  $info_of->{$key}{seq};
     }
     $out_string .= "\n";
 
@@ -217,7 +210,7 @@ sub trim_head_tail {
     # default value means only trimming indels starting at the first base
     $chop_length = defined $chop_length ? $chop_length : 1;
 
-    my @keys = keys %{$info_of};
+    my @keys         = keys %{$info_of};
     my $align_length = length $info_of->{ $keys[0] }{seq};
 
     # chop region covers all

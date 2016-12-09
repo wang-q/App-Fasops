@@ -12,7 +12,7 @@ use constant abstract => 'join multiple blocked fasta files by common target';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s", "According to this species. Default is the first one." ],
+        [ "name|n=s",    "According to this species. Default is the first one." ],
     );
 }
 
@@ -23,7 +23,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc .= "\tinfiles are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\t<infiles> are blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -37,6 +38,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -44,7 +46,7 @@ sub validate_args {
 
     if ( !exists $opt->{outfile} ) {
         $opt->{outfile}
-            = Path::Tiny::path( $args->[0] )->absolute . ".slice.fas";
+            = Path::Tiny::path( $args->[0] )->absolute . ".join.fas";
     }
 }
 
@@ -53,7 +55,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -61,7 +63,13 @@ sub execute {
 
     tie my %block_of, "Tie::IxHash";
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -80,8 +88,7 @@ sub execute {
                 }
 
                 # target name
-                my $header = App::RL::Common::encode_header(
-                    $info_of->{ $opt->{name} } );
+                my $header = App::RL::Common::encode_header( $info_of->{ $opt->{name} } );
 
                 if ( exists $block_of{$header} ) {
                     my @other_names

@@ -12,18 +12,9 @@ use constant abstract => 'convert axt to blocked fasta';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename, [stdout] for screen." ],
-        [   "length|l=i",
-            "the threshold of alignment length, default is [1]",
-            { default => 1 }
-        ],
-        [   "tname|t=s",
-            "target name, default is [target]",
-            { default => "target" }
-        ],
-        [   "qname|q=s",
-            "query name, default is [query]",
-            { default => "query" }
-        ],
+        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
+        [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
         [   "size|s=s",
             "query chr.sizes. Without this file, positions of negtive strand of query will be wrong",
         ],
@@ -36,9 +27,9 @@ sub usage_desc {
 
 sub description {
     my $desc;
-    $desc
-        .= "Convert UCSC axt pairwise alignment file to blocked fasta file.\n";
-    $desc .= "\tInfiles are paths to axt files, .axt.gz is supported\n";
+    $desc .= "Convert UCSC axt pairwise alignment file to blocked fasta file.\n";
+    $desc .= "\t<infiles> are paths to axt files, .axt.gz is supported\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -52,6 +43,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -84,7 +76,7 @@ sub execute {
 
     my $out_fh;
     if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = \*STDOUT;
+        $out_fh = *STDOUT{IO};
     }
     else {
         open $out_fh, ">", $opt->{outfile};
@@ -96,7 +88,13 @@ sub execute {
     }
 
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -110,25 +108,21 @@ sub execute {
                 next;
             }
             elsif ( ( $line eq '' or $line =~ /^\s+$/ ) and $content ne '' ) {
-                my $info_refs = App::Fasops::Common::parse_axt_block( $content,
-                    $length_of );
+                my $info_refs = App::Fasops::Common::parse_axt_block( $content, $length_of );
                 $content = '';
 
                 next
-                    if App::Fasops::Common::seq_length( $info_refs->[0]{seq} )
-                    < $opt->{length};
+                    if App::Fasops::Common::seq_length( $info_refs->[0]{seq} ) < $opt->{length};
                 next
-                    if App::Fasops::Common::seq_length( $info_refs->[1]{seq} )
-                    < $opt->{length};
+                    if App::Fasops::Common::seq_length( $info_refs->[1]{seq} ) < $opt->{length};
 
                 $info_refs->[0]{name} = $opt->{tname};
                 $info_refs->[1]{name} = $opt->{qname};
 
                 for my $i ( 0, 1 ) {
                     my $info = $info_refs->[$i];
-                    printf {$out_fh} ">%s\n",
-                        App::RL::Common::encode_header($info);
-                    printf {$out_fh} "%s\n", $info->{seq};
+                    printf {$out_fh} ">%s\n", App::RL::Common::encode_header($info);
+                    printf {$out_fh} "%s\n",  $info->{seq};
                 }
                 print {$out_fh} "\n";
             }
