@@ -7,8 +7,7 @@ use App::Fasops -command;
 use App::RL::Common;
 use App::Fasops::Common;
 
-use constant abstract =>
-    'split blocked fasta files to separate per-alignment files';
+use constant abstract => 'split blocked fasta files to separate per-alignment files';
 
 sub opt_spec {
     return (
@@ -25,8 +24,8 @@ sub usage_desc {
 sub description {
     my $desc;
     $desc .= ucfirst(abstract) . ".\n";
-    $desc
-        .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\t<infiles> are paths to blocked fasta files, .fas.gz is supported.\n";
+    $desc .= "\tinfile == stdin means reading from STDIN\n";
     return $desc;
 }
 
@@ -40,6 +39,7 @@ sub validate_args {
         $self->usage_error($message);
     }
     for ( @{$args} ) {
+        next if lc $_ eq "stdin";
         if ( !Path::Tiny::path($_)->is_file ) {
             $self->usage_error("The input file [$_] doesn't exist.");
         }
@@ -63,7 +63,13 @@ sub execute {
     my ( $self, $opt, $args ) = @_;
 
     for my $infile ( @{$args} ) {
-        my $in_fh = IO::Zlib->new( $infile, "rb" );
+        my $in_fh;
+        if ( lc $infile eq "stdin" ) {
+            $in_fh = *STDIN{IO};
+        }
+        else {
+            $in_fh = IO::Zlib->new( $infile, "rb" );
+        }
 
         my $content = '';    # content of one block
         while (1) {
@@ -78,8 +84,7 @@ sub execute {
 
                 if ( lc( $opt->{outdir} ) eq "stdout" ) {
                     for my $key ( keys %{$info_of} ) {
-                        printf ">%s\n",
-                            App::RL::Common::encode_header( $info_of->{$key} );
+                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
                         print $info_of->{$key}{seq} . "\n";
                     }
                 }
@@ -91,8 +96,7 @@ sub execute {
                         $filename .= '.fas';
                     }
                     else {
-                        $filename = App::RL::Common::encode_header(
-                            $info_of->{$target} );
+                        $filename = App::RL::Common::encode_header( $info_of->{$target} );
                         $filename =~ s/\|.+//;    # remove addtional fields
                         $filename =~ s/[\(\)\:]+/./g;
                         $filename .= '.fas';
