@@ -4,7 +4,7 @@
       "Qiang Wang <wang-q@outlook.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Milla version v1.0.16, Dist::Zilla version 6.006, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Milla version v1.0.17, Dist::Zilla version 6.006, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "perl_5"
    ],
@@ -31,22 +31,22 @@
       },
       "develop" : {
          "requires" : {
-            "Dist::Milla" : "v1.0.16",
+            "Dist::Milla" : "v1.0.17",
             "Test::Pod" : "1.41"
          }
       },
       "runtime" : {
          "requires" : {
-            "AlignDB::IntSpan" : "v1.0.7",
+            "AlignDB::IntSpan" : "v1.1.0",
             "App::Cmd" : "0.330",
             "App::RL" : "v0.2.23",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0.413",
-            "MCE" : "1.708",
+            "MCE" : "1.810",
             "Path::Tiny" : "0.076",
             "Tie::IxHash" : "1.23",
             "YAML::Syck" : "1.29",
-            "perl" : "5.012001"
+            "perl" : "5.010001"
          }
       },
       "test" : {
