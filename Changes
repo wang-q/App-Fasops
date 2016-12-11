@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.5.2  2016-12-12 02:06:09 CST
+    - Bring Perl 5.10 back
+
 0.5.1  2016-12-09 21:51:44 CST
     - Drop Perl 5.10
 
