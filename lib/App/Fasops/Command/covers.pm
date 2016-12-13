@@ -10,13 +10,14 @@ use constant abstract => 'scan blocked fasta files and output covers on chromoso
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s",    "Only output this species." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "name|n=s",    "Only output this species" ],
+        [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
         [   "trim|t=i",
-            "Trim align borders to avoid some overlaps in lastz results. Default is [0]",
+            "Trim align borders to avoid some overlaps in lastz results",
             { default => 0 }
         ],
+        { show_defaults => 1, }
     );
 }
 

@@ -14,6 +14,7 @@ sub opt_spec {
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "pair|p",      "pairwise links" ],
         [ "best|b",      "best-to-best pairwise links" ],
+        { show_defaults => 1, }
     );
 }
 

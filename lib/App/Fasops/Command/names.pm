@@ -10,8 +10,9 @@ use constant abstract => 'scan blocked fasta files and output all species names'
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
         [ "count|c",     "Also count name occurrences" ],
+        { show_defaults => 1, }
     );
 }
 

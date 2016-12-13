@@ -14,6 +14,7 @@ sub opt_spec {
         [ "outdir|o=s", "Output location, [stdout] for screen" ],
         [ "rm|r",       "If outdir exists, remove it before operating." ],
         [ "chr",        "Split by chromosomes." ],
+        { show_defaults => 1, }
     );
 }
 

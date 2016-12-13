@@ -13,7 +13,8 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "name|n=s",    "According to this species. Default is the first one." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
+        { show_defaults => 1, }
     );
 }
 

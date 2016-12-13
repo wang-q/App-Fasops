@@ -11,13 +11,12 @@ use constant abstract => 'separate blocked fasta files by species';
 
 sub opt_spec {
     return (
-        [   "outdir|o=s", "Output location, [stdout] for screen, default is [.]", { default => '.' }
-        ],
-        [   "suffix|s=s", "Extensions of output files, default is [.fasta]", { default => '.fasta' }
-        ],
-        [ "rm|r",   "If outdir exists, remove it before operating" ],
-        [ "rc",     "Revcom sequences when chr_strand is '-'" ],
-        [ "nodash", "Remove dashes ('-') from sequences" ],
+        [ "outdir|o=s", "Output location, [stdout] for screen", { default => '.' } ],
+        [ "suffix|s=s", "Extensions of output files",           { default => '.fasta' } ],
+        [ "rm|r",       "If outdir exists, remove it before operating" ],
+        [ "rc",         "Revcom sequences when chr_strand is '-'" ],
+        [ "nodash",     "Remove dashes ('-') from sequences" ],
+        { show_defaults => 1, }
     );
 }
 

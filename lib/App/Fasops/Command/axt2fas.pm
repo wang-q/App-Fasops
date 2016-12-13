@@ -11,13 +11,14 @@ use constant abstract => 'convert axt to blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename, [stdout] for screen." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
-        [ "tname|t=s", "target name, default is [target]", { default => "target" } ],
-        [ "qname|q=s", "query name, default is [query]",   { default => "query" } ],
+        [ "outfile|o=s", "Output filename, [stdout] for screen" ],
+        [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
+        [ "tname|t=s",  "target name",                       { default => "target" } ],
+        [ "qname|q=s",  "query name",                        { default => "query" } ],
         [   "size|s=s",
             "query chr.sizes. Without this file, positions of negtive strand of query will be wrong",
         ],
+        { show_defaults => 1, }
     );
 }
 

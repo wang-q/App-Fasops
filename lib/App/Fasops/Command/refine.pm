@@ -17,14 +17,15 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "outgroup",    "Has outgroup at the end of blocks.", ],
-        [ "parallel|p=i", "run in parallel mode. Default is [1].", { default => 1 }, ],
-        [ "msa=s",        "Aligning program. Default is [mafft].", { default => "mafft" }, ],
+        [ "parallel|p=i", "run in parallel mode", { default => 1 }, ],
+        [ "msa=s",        "Aligning program",     { default => "mafft" }, ],
         [   "quick",
             "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
         ],
-        [ "pad=i",  "In quick mode, enlarge indel regions. Default is [50].", { default => 50 }, ],
-        [ "fill=i", "In quick mode, join indel regions. Default is [50].",    { default => 50 }, ],
-        [ "chop=i", "Chop head and tail indels. Default is [0].",             { default => 0 }, ],
+        [ "pad=i",  "In quick mode, enlarge indel regions", { default => 50 }, ],
+        [ "fill=i", "In quick mode, join indel regions",    { default => 50 }, ],
+        [ "chop=i", "Chop head and tail indels",            { default => 0 }, ],
+        { show_defaults => 1, }
     );
 }
 

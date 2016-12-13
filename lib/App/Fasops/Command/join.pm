@@ -11,8 +11,9 @@ use constant abstract => 'join multiple blocked fasta files by common target';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "name|n=s",    "According to this species. Default is the first one." ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "name|n=s",    "According to this species. Default is the first one" ],
+        { show_defaults => 1, }
     );
 }
 

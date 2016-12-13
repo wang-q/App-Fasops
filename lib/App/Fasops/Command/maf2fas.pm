@@ -11,8 +11,9 @@ use constant abstract => 'convert maf to blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "length|l=i", "the threshold of alignment length, default is [1]", { default => 1 } ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
+        { show_defaults => 1, }
     );
 }
 

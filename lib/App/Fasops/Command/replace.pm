@@ -10,7 +10,7 @@ use App::Fasops::Common;
 use constant abstract => 'replace headers from a blocked fasta';
 
 sub opt_spec {
-    return ( [ "outfile|o=s", "Output filename. [stdout] for screen." ], );
+    return ( [ "outfile|o=s", "Output filename. [stdout] for screen." ], { show_defaults => 1, } );
 }
 
 sub usage_desc {

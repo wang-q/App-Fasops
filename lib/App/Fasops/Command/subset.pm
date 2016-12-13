@@ -14,6 +14,7 @@ sub opt_spec {
         [ "outfile|o=s", "Output filename. [stdout] for screen." ],
         [ "first",       "Always keep the first species." ],
         [ "required",    "Skip blocks not containing all the names." ],
+        { show_defaults => 1, }
     );
 }
 
