@@ -29,7 +29,7 @@ SKIP: {
 SKIP: {
     skip "muscle not installed", 1 unless IPC::Cmd::can_run('muscle');
 
-    my $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas --msa muscle -o stdout)] );
+    my $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas --msa muscle --quick -o stdout)] );
     my $output = $result->stdout;
     $output =~ s/\-//g;
     $output =~ s/\s+//g;
@@ -37,6 +37,13 @@ SKIP: {
     $original =~ s/\-//g;
     $original =~ s/\s+//g;
     is( $output, $original, 'same without dashes' );
+
+    $result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --msa muscle --outgroup -o stdout)] );
+    like($result->stdout, qr{CA-GT}, 'outgroup trimmed' );
+
+    $result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --msa muscle -o stdout)] );
+    like($result->stdout, qr{CA--GT}, 'outgroup not trimmed' );
+
 }
 
 done_testing();

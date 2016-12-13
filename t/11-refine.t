@@ -13,17 +13,11 @@ like( $result->stdout, qr{refine}, 'descriptions' );
 $result = test_app( 'App::Fasops' => [qw(refine t/example.fas --msa none -o stdout)] );
 is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 24, 'line count' );
 
-$result = test_app( 'App::Fasops' => [qw(refine t/example.fas --msa none --quick -p 2 -o stdout)] );
+$result = test_app( 'App::Fasops' => [qw(refine t/example.fas --msa none -p 2 -o stdout)] );
 is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 24, 'line count' );
 
 $result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --msa none -o stdout)] );
 is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 6, 'line count' );
-
-$result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --msa none --outgroup -o stdout)] );
-like($result->stdout, qr{CA-GT}, 'outgroup trimmed' );
-
-$result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --msa none -o stdout)] );
-like($result->stdout, qr{CA--GT}, 'outgroup not trimmed' );
 
 $result = test_app( 'App::Fasops' => [qw(refine t/example.fas --msa none --chop 10 -o stdout)] );
 is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 24, 'line count' );
