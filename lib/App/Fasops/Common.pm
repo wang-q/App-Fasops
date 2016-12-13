@@ -878,7 +878,7 @@ sub polarize_snp {
         $site->{snp_occured}   = $snp_occured;
     }
 
-    return;
+    return $sites;
 }
 
 sub get_indels {
@@ -911,7 +911,7 @@ sub get_indels {
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
             sort { $a->[1] <=> $b->[1] }
-                map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
 
         if ( scalar @uniq_indel_seqs < 2 ) {
             Carp::confess "no indel!\n";
@@ -961,14 +961,14 @@ sub get_indels {
 
         push @sites,
             {
-                indel_start    => $indel_start,
-                indel_end      => $indel_end,
-                indel_length   => $indel_length,
-                indel_seq      => $indel_seq,
-                indel_all_seqs => $indel_all_seqs,
-                indel_freq     => $indel_freq,
-                indel_occured  => $indel_occured,
-                indel_type     => $indel_type,
+            indel_start    => $indel_start,
+            indel_end      => $indel_end,
+            indel_length   => $indel_length,
+            indel_seq      => $indel_seq,
+            indel_all_seqs => $indel_all_seqs,
+            indel_freq     => $indel_freq,
+            indel_occured  => $indel_occured,
+            indel_type     => $indel_type,
             };
     }
 
@@ -979,7 +979,7 @@ sub polarize_indel {
     my $sites        = shift;
     my $outgroup_seq = shift;
 
-    my $outgroup_indel_set = App::Fasops::Common::indel_intspan($outgroup_seq);
+    my $outgroup_indel_set = indel_intspan($outgroup_seq);
 
     for my $site ( @{$sites} ) {
         my @indel_seqs = split /\|/, $site->{indel_all_seqs};
@@ -989,7 +989,7 @@ sub polarize_indel {
 
         my ( $indel_type, $indel_occured, $indel_freq );
 
-        my $indel_set = AlignDB::IntSpan->new(" $site->{indel_start}- $site->{indel_end}");
+        my $indel_set = AlignDB::IntSpan->new("$site->{indel_start}-$site->{indel_end}");
 
         # this line is different to previous subroutines
         my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $indel_outgroup_seq );
@@ -997,7 +997,7 @@ sub polarize_indel {
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
             sort { $a->[1] <=> $b->[1] }
-                map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+            map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
 
         if ( scalar @uniq_indel_seqs < 2 ) {
             Carp::confess "no indel!\n";
@@ -1079,7 +1079,7 @@ sub polarize_indel {
         $site->{indel_freq}         = $indel_freq;
     }
 
-    return;
+    return $sites;
 }
 
 # Give a chr position, return an align position starting from '1'.

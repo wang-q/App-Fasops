@@ -201,7 +201,7 @@ use App::Fasops::Common;
         my ( $seq_refs, $outgroup_seq, $except_ref ) = @{ $data[$i] };
 
         my $result_ref = App::Fasops::Common::get_indels($seq_refs);
-        App::Fasops::Common::polarize_indel( $result_ref, $outgroup_seq );
+        $result_ref = App::Fasops::Common::polarize_indel( $result_ref, $outgroup_seq );
         is_deeply( $result_ref, $except_ref, "polarize_indel $i" );
     }
 }
