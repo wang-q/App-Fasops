@@ -823,6 +823,64 @@ sub get_snps {
     return \@sites;
 }
 
+sub polarize_snp {
+    my $sites        = shift;
+    my $outgroup_seq = shift;
+
+    for my $site ( @{$sites} ) {
+        my $outgroup_base = substr $outgroup_seq, $site->{snp_pos} - 1, 1;
+
+        my @nts = split '', $site->{all_bases};
+        my @class;
+        for my $nt (@nts) {
+            my $class_bool = 0;
+            for (@class) {
+                if ( $_ eq $nt ) { $class_bool = 1; }
+            }
+            unless ($class_bool) {
+                push @class, $nt;
+            }
+        }
+
+        my ( $mutant_to, $snp_freq, $snp_occured );
+
+        if ( scalar @class < 2 ) {
+            Carp::confess "Not a real SNP\n";
+        }
+        elsif ( scalar @class == 2 ) {
+            for my $nt (@nts) {
+                if ( $nt eq $outgroup_base ) {
+                    $snp_occured .= '0';
+                }
+                else {
+                    $snp_occured .= '1';
+                    $snp_freq++;
+                    $mutant_to = "$outgroup_base->$nt";
+                }
+            }
+        }
+        else {
+            $snp_freq    = -1;
+            $mutant_to   = 'Complex';
+            $snp_occured = 'unknown';
+        }
+
+        # outgroup_base is not equal to any nts
+        if ( $snp_occured eq ( '1' x ( length $snp_occured ) ) ) {
+            $snp_freq    = -1;
+            $mutant_to   = 'Complex';
+            $snp_occured = 'unknown';
+        }
+
+        $site->{outgroup_base} = $outgroup_base;
+        $site->{mutant_to}     = $mutant_to;
+        $site->{snp_freq}      = $snp_freq;
+        $site->{snp_occured}   = $snp_occured;
+    }
+
+    return;
+}
+
 sub get_indels {
     my $seq_refs = shift;
 
