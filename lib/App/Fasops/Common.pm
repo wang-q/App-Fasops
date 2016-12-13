@@ -776,6 +776,80 @@ sub multi_seq_stat {
     ];
 }
 
+sub get_snps {
+    my $seq_refs = shift;
+
+    my $align_length = length $seq_refs->[0];
+    my $seq_count    = scalar @{$seq_refs};
+
+    # SNPs
+    my $snp_bases_of = {};
+    for my $pos ( 1 .. $align_length ) {
+        my @bases;
+        for my $i ( 0 .. $seq_count - 1 ) {
+            my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
+            push @bases, $base;
+        }
+
+        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
+            if ( List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
+                $snp_bases_of->{$pos} = \@bases;
+            }
+        }
+    }
+
+    my @sites;
+    for my $pos ( sort { $a <=> $b } keys %{$snp_bases_of} ) {
+
+        my @bases = @{ $snp_bases_of->{$pos} };
+
+        my $target_base = $bases[0];
+        my $all_bases = join '', @bases;
+
+        my $query_base;
+        my $mutant_to;
+        my $snp_freq = 0;
+        my $snp_occured;
+        my @class = List::MoreUtils::PP::uniq(@bases);
+        if ( scalar @class < 2 ) {
+            Carp::confess "no snp\n";
+        }
+        elsif ( scalar @class > 2 ) {
+            $snp_freq    = -1;
+            $snp_occured = 'unknown';
+        }
+        else {
+            for (@bases) {
+                if ( $target_base ne $_ ) {
+                    $snp_freq++;
+                    $snp_occured .= '0';
+                }
+                else {
+                    $snp_occured .= '1';
+                }
+            }
+            ($query_base) = grep { $_ ne $target_base } @bases;
+            $mutant_to = $target_base . '<->' . $query_base;
+        }
+
+        # here freq is the minor allele freq
+        $snp_freq = List::Util::min( $snp_freq, $seq_count - $snp_freq );
+
+        push @sites,
+            {
+                snp_pos     => $pos,
+                target_base => $target_base,
+                query_base  => $query_base,
+                all_bases   => $all_bases,
+                mutant_to   => $mutant_to,
+                snp_freq    => $snp_freq,
+                snp_occured => $snp_occured,
+            };
+    }
+
+    return \@sites;
+}
+
 # Give a chr position, return an align position starting from '1'.
 sub chr_to_align {
     my AlignDB::IntSpan $intspan = shift;

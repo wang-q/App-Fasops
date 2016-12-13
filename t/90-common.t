@@ -1,11 +1,10 @@
 use strict;
 use warnings;
+
 use Test::More;
 use Test::Number::Delta within => 1e-2;
 
-BEGIN {
-    use_ok('App::Fasops::Common');
-}
+use App::Fasops::Common;
 
 {
     print "#seq_length\n";
@@ -120,7 +119,7 @@ BEGIN {
             [ 16, 15, 13, 2, 1, 0, 0, 0.1333, ],
         ],
 
-        #               * **    *   ** **  *
+        #               * **    *   ** *   *
         [   [   qw{ GATTATCATCACCCCAGCCACATW
                     GATTTT--TCACTCCATTCGCATA }
             ],
@@ -133,6 +132,105 @@ BEGIN {
 
         my $result_ref = App::Fasops::Common::multi_seq_stat($seq_refs);
         Test::Number::Delta::delta_ok( $result_ref, $except_ref, "stat $i" );
+    }
+}
+
+{
+    print "#get_snps\n";
+
+    my @data = (
+
+        #                   *
+        [   [   qw{ AAAATTTTGG
+                    AAAATTTTTG }
+            ],
+            [   {   all_bases   => "GT",
+                    mutant_to   => "G<->T",
+                    query_base  => "T",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 9,
+                    target_base => "G",
+                },
+            ],
+        ],
+
+        #           *          * *
+        [   [   qw{ TTAGCCGCTGAGAAGC
+                    GTAGCCGCTGA-AGGC }
+            ],
+            [   {   all_bases   => "TG",
+                    mutant_to   => "T<->G",
+                    query_base  => "G",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 1,
+                    target_base => "T",
+                },
+                {   all_bases   => "AG",
+                    mutant_to   => "A<->G",
+                    query_base  => "G",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 14,
+                    target_base => "A",
+                },
+            ],
+        ],
+
+        #               * **    *   ** *   *
+        [   [   qw{ GATTATCATCACCCCAGCCACATW
+                    GATTTT--TCACTCCATTCGCATA }
+            ],
+            [   {   all_bases   => "AT",
+                    mutant_to   => "A<->T",
+                    query_base  => "T",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 5,
+                    target_base => "A",
+                },
+                {   all_bases   => "CT",
+                    mutant_to   => "C<->T",
+                    query_base  => "T",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 13,
+                    target_base => "C",
+                },
+                {   all_bases   => "GT",
+                    mutant_to   => "G<->T",
+                    query_base  => "T",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 17,
+                    target_base => "G",
+                },
+                {   all_bases   => "CT",
+                    mutant_to   => "C<->T",
+                    query_base  => "T",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 18,
+                    target_base => "C",
+                },
+                {   all_bases   => "AG",
+                    mutant_to   => "A<->G",
+                    query_base  => "G",
+                    snp_freq    => 1,
+                    snp_occured => 10,
+                    snp_pos     => 20,
+                    target_base => "A",
+                },
+            ],
+        ],
+    );
+
+    for my $i ( 0 .. $#data ) {
+        my ( $seq_refs, $except_ref ) = @{ $data[$i] };
+
+        my $result_ref = App::Fasops::Common::get_snps($seq_refs);
+        is_deeply( $result_ref, $except_ref, "get_snps $i" );
     }
 }
 
