@@ -975,6 +975,113 @@ sub get_indels {
     return \@sites;
 }
 
+sub polarize_indel {
+    my $sites        = shift;
+    my $outgroup_seq = shift;
+
+    my $outgroup_indel_set = App::Fasops::Common::indel_intspan($outgroup_seq);
+
+    for my $site ( @{$sites} ) {
+        my @indel_seqs = split /\|/, $site->{indel_all_seqs};
+
+        my $indel_outgroup_seq = substr $outgroup_seq, $site->{indel_start} - 1,
+            $site->{indel_length};
+
+        my ( $indel_type, $indel_occured, $indel_freq );
+
+        my $indel_set = AlignDB::IntSpan->new(" $site->{indel_start}- $site->{indel_end}");
+
+        # this line is different to previous subroutines
+        my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $indel_outgroup_seq );
+
+        # seqs with least '-' char wins
+        my ($indel_seq) = map { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+                map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+
+        if ( scalar @uniq_indel_seqs < 2 ) {
+            Carp::confess "no indel!\n";
+        }
+        elsif ( scalar @uniq_indel_seqs > 2 ) {
+            $indel_type = 'C';
+        }
+        elsif ( $indel_seq =~ /-/ ) {
+            $indel_type = 'C';
+        }
+        else {
+
+            if (    ( $indel_outgroup_seq !~ /\-/ )
+                and ( $indel_seq ne $indel_outgroup_seq ) )
+            {
+
+                # this section should already be judged in previes
+                # uniq_indel_seqs section, but I keep it here for safe
+
+                # reference indel content does not contain '-' and is not equal
+                # to the one of alignment
+                #     AAA
+                #     A-A
+                # ref ACA
+                $indel_type = 'C';
+            }
+            elsif ( $outgroup_indel_set->intersect($indel_set)->is_not_empty ) {
+                my $island = $outgroup_indel_set->find_islands($indel_set);
+                if ( $island->equal($indel_set) ) {
+
+                    #     NNNN
+                    #     N--N
+                    # ref N--N
+                    $indel_type = 'I';
+                }
+                else {
+                    # reference indel island is larger or smaller
+                    #     NNNN
+                    #     N-NN
+                    # ref N--N
+                    # or
+                    #     NNNN
+                    #     N--N
+                    # ref N-NN
+                    $indel_type = 'C';
+                }
+            }
+            elsif ( $outgroup_indel_set->intersect($indel_set)->is_empty ) {
+
+                #     NNNN
+                #     N--N
+                # ref NNNN
+                $indel_type = 'D';
+            }
+            else {
+                Carp::confess "Errors when polarizing indel!\n";
+            }
+        }
+
+        if ( $indel_type eq 'C' ) {
+            $indel_occured = 'unknown';
+            $indel_freq    = -1;
+        }
+        else {
+            for my $seq (@indel_seqs) {
+                if ( $seq eq $indel_outgroup_seq ) {
+                    $indel_occured .= '0';
+                }
+                else {
+                    $indel_occured .= '1';
+                    $indel_freq++;
+                }
+            }
+        }
+
+        $site->{indel_outgroup_seq} = $indel_outgroup_seq;
+        $site->{indel_type}         = $indel_type;
+        $site->{indel_occured}      = $indel_occured;
+        $site->{indel_freq}         = $indel_freq;
+    }
+
+    return;
+}
+
 # Give a chr position, return an align position starting from '1'.
 sub chr_to_align {
     my AlignDB::IntSpan $intspan = shift;
