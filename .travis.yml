@@ -12,7 +12,6 @@ before_install:
   - sudo apt-get install -qq mafft
 install:
   - cpanm -nq --installdeps --with-develop .
-sudo: false
 before_script:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover Devel::Cover::Report::Codecov
 script:
