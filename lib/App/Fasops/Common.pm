@@ -94,9 +94,8 @@ sub parse_axt_block {
     my @lines = grep {/\S/} split /\n/, $block;
     Carp::croak "A block of axt should contain three lines\n" if @lines != 3;
 
-    my (undef,       $first_chr,    $first_start,
-        $first_end,  $second_chr,   $second_start,
-        $second_end, $query_strand, undef,
+    my (undef,         $first_chr,  $first_start,  $first_end, $second_chr,
+        $second_start, $second_end, $query_strand, undef,
     ) = split /\s+/, $lines[0];
 
     if ( $query_strand eq "-" ) {
@@ -138,8 +137,7 @@ sub parse_maf_block {
     tie my %info_of, "Tie::IxHash";
 
     for my $sline (@lines) {
-        my ( undef, $src, $start, $size, $strand, undef, $text ) = split /\s+/,
-            $sline;
+        my ( undef, $src, $start, $size, $strand, undef, $text ) = split /\s+/, $sline;
 
         my ( $species, $chr_name ) = split /\./, $src;
         $chr_name = $species if !defined $chr_name;
@@ -181,6 +179,7 @@ sub seq_length {
 sub indel_intspan {
     my $seq = shift;
 
+    #@type AlignDB::IntSpan
     my $intspan = AlignDB::IntSpan->new;
     my $length  = length($seq);
 
@@ -215,8 +214,9 @@ sub indel_intspan {
 sub seq_intspan {
     my $seq = shift;
 
-    my $length  = length($seq);
+    #@type AlignDB::IntSpan
     my $intspan = AlignDB::IntSpan->new;
+    my $length  = length($seq);
     $intspan->add_pair( 1, $length );
 
     $intspan->subtract( indel_intspan($seq) );
@@ -363,11 +363,7 @@ sub align_seqs_quick {
 
         my @segments;
         for my $i ( 0 .. $seq_count - 1 ) {
-            my $seg = substr(
-                $aligned[$i],
-                $seg_start - 1,
-                $seg_end - $seg_start + 1
-            );
+            my $seg = substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1 );
             push @segments, $seg;
         }
         my $realigned_segments = align_seqs( \@segments );
@@ -375,11 +371,7 @@ sub align_seqs_quick {
         for my $i ( 0 .. $seq_count - 1 ) {
             my $seg = $realigned_segments->[$i];
             $seg = uc $seg;
-            substr(
-                $aligned[$i],
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, $seg
-            );
+            substr( $aligned[$i], $seg_start - 1, $seg_end - $seg_start + 1, $seg );
         }
     }
 
@@ -416,11 +408,7 @@ sub trim_pure_dash {
         my $seg_end   = $span->[1];
 
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr(
-                $seq_refs->[$i],
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, ""
-            );
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
         }
     }
 
@@ -465,11 +453,7 @@ sub trim_outgroup {
         my $seg_end   = $span->[1];
 
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr(
-                $seq_refs->[$i],
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, ""
-            );
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
         }
     }
 
@@ -515,11 +499,7 @@ sub trim_complex_indel {
 
         # trim sequence, including outgroup
         for my $i ( 0 .. $seq_count - 1 ) {
-            substr(
-                $seq_refs->[$i],
-                $seg_start - 1,
-                $seg_end - $seg_start + 1, ""
-            );
+            substr( $seq_refs->[$i], $seg_start - 1, $seg_end - $seg_start + 1, "" );
         }
 
         # add to complex_region
@@ -542,8 +522,7 @@ sub trim_complex_indel {
 
     # add ingroup-outgroup complex indels to complex_region
     for my $i (@ingroup_idx) {
-        my $outgroup_intersect_intspan
-            = $outgroup_indel_intspan->intersect( $indel_intspans[$i] );
+        my $outgroup_intersect_intspan = $outgroup_indel_intspan->intersect( $indel_intspans[$i] );
         for my $sub_out_set ( $outgroup_intersect_intspan->sets ) {
             for my $sub_union_set ( $union_set->sets ) {
 
@@ -682,18 +661,18 @@ sub ref_pair_D {
     return ( $d1, $d2, $dc ) if $length == 0;
 
     for my $pos ( 1 .. $length ) {
-        my $base0    = substr $seq_refs->[0], $pos - 1, 1;
-        my $base1    = substr $seq_refs->[1], $pos - 1, 1;
-        my $base_ref = substr $seq_refs->[2], $pos - 1, 1;
+        my $base0   = substr $seq_refs->[0], $pos - 1, 1;
+        my $base1   = substr $seq_refs->[1], $pos - 1, 1;
+        my $base_og = substr $seq_refs->[2], $pos - 1, 1;
         if ( $base0 ne $base1 ) {
             if (   $base0 =~ /[atcg]/i
                 && $base1 =~ /[atcg]/i
-                && $base_ref =~ /[atcg]/i )
+                && $base_og =~ /[atcg]/i )
             {
-                if ( $base1 eq $base_ref ) {
+                if ( $base1 eq $base_og ) {
                     $d1++;
                 }
-                elsif ( $base0 eq $base_ref ) {
+                elsif ( $base0 eq $base_og ) {
                     $d2++;
                 }
                 else {
@@ -724,9 +703,7 @@ sub multi_seq_stat {
     my $legnth = length $seq_refs->[0];
 
     # For every positions, search for polymorphism_site
-    my ( $comparable_bases, $identities, $differences, $gaps, $ns,
-        $align_errors, )
-        = (0) x 6;
+    my ( $comparable_bases, $identities, $differences, $gaps, $ns, $align_errors, ) = (0) x 6;
     for my $pos ( 1 .. $legnth ) {
         my @bases = ();
         for my $i ( 0 .. $seq_count - 1 ) {
@@ -754,10 +731,8 @@ sub multi_seq_stat {
     if ( $comparable_bases == 0 ) {
         print YAML::Syck::Dump { seqs => $seq_refs, };
         Carp::carp "number_of_comparable_bases == 0!!\n";
-        return [
-            $legnth, $comparable_bases, $identities, $differences,
-            $gaps,   $ns,               $legnth,     undef,
-        ];
+        return [ $legnth, $comparable_bases, $identities, $differences,
+            $gaps, $ns, $legnth, undef, ];
     }
 
     my @all_Ds;
@@ -770,10 +745,8 @@ sub multi_seq_stat {
 
     my $D = mean(@all_Ds);
 
-    return [
-        $legnth, $comparable_bases, $identities,   $differences,
-        $gaps,   $ns,               $align_errors, $D,
-    ];
+    return [ $legnth, $comparable_bases, $identities, $differences,
+        $gaps, $ns, $align_errors, $D, ];
 }
 
 sub get_snps {
@@ -837,13 +810,107 @@ sub get_snps {
 
         push @sites,
             {
-                snp_pos     => $pos,
-                target_base => $target_base,
-                query_base  => $query_base,
-                all_bases   => $all_bases,
-                mutant_to   => $mutant_to,
-                snp_freq    => $snp_freq,
-                snp_occured => $snp_occured,
+            snp_pos     => $pos,
+            target_base => $target_base,
+            query_base  => $query_base,
+            all_bases   => $all_bases,
+            mutant_to   => $mutant_to,
+            snp_freq    => $snp_freq,
+            snp_occured => $snp_occured,
+            };
+    }
+
+    return \@sites;
+}
+
+sub get_indels {
+    my $seq_refs = shift;
+
+    my $seq_count = scalar @{$seq_refs};
+
+    my $indel_set = AlignDB::IntSpan->new;
+    for my $i ( 0 .. $seq_count - 1 ) {
+        my $seq_indel_set = indel_intspan( $seq_refs->[$i] );
+        $indel_set->merge($seq_indel_set);
+    }
+
+    my @sites;
+
+    # indels
+    for my $cur_indel ( $indel_set->spans ) {
+        my ( $indel_start, $indel_end ) = @{$cur_indel};
+        my $indel_length = $indel_end - $indel_start + 1;
+
+        my @indel_seqs;
+        for my $seq ( @{$seq_refs} ) {
+            push @indel_seqs, ( substr $seq, $indel_start - 1, $indel_length );
+        }
+        my $indel_all_seqs = join "|", @indel_seqs;
+
+        my $indel_type;
+        my @uniq_indel_seqs = List::MoreUtils::PP::uniq(@indel_seqs);
+
+        # seqs with least '-' char wins
+        my ($indel_seq) = map { $_->[0] }
+            sort { $a->[1] <=> $b->[1] }
+                map { [ $_, tr/-/-/ ] } @uniq_indel_seqs;
+
+        if ( scalar @uniq_indel_seqs < 2 ) {
+            Carp::confess "no indel!\n";
+            next;
+        }
+        elsif ( scalar @uniq_indel_seqs > 2 ) {
+            $indel_type = 'C';
+        }
+        elsif ( $indel_seq =~ /-/ ) {
+            $indel_type = 'C';
+        }
+        else {
+            #   'D': means deletion relative to target/first seq
+            #        target is ----
+            #   'I': means insertion relative to target/first seq
+            #        target is AAAA
+            if ( $indel_seqs[0] eq $indel_seq ) {
+                $indel_type = 'I';
+            }
+            else {
+                $indel_type = 'D';
+            }
+        }
+
+        my $indel_freq = 0;
+        my $indel_occured;
+        if ( $indel_type eq 'C' ) {
+            $indel_freq    = -1;
+            $indel_occured = 'unknown';
+        }
+        else {
+            for (@indel_seqs) {
+
+                # same as target 'x', not 'o'
+                if ( $indel_seqs[0] eq $_ ) {
+                    $indel_freq++;
+                    $indel_occured .= '0';
+                }
+                else {
+                    $indel_occured .= '1';
+                }
+            }
+        }
+
+        # here freq is the minor allele freq
+        $indel_freq = List::Util::min( $indel_freq, $seq_count - $indel_freq );
+
+        push @sites,
+            {
+                indel_start    => $indel_start,
+                indel_end      => $indel_end,
+                indel_length   => $indel_length,
+                indel_seq      => $indel_seq,
+                indel_all_seqs => $indel_all_seqs,
+                indel_freq     => $indel_freq,
+                indel_occured  => $indel_occured,
+                indel_type     => $indel_type,
             };
     }
 

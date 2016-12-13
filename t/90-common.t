@@ -155,8 +155,8 @@ use App::Fasops::Common;
             ],
         ],
 
-        #           *          * *
-        [   [   qw{ TTAGCCGCTGAGAAGC
+        #           *   **     * *
+        [   [   qw{ TTAG--GCTGAGAAGC
                     GTAGCCGCTGA-AGGC }
             ],
             [   {   all_bases   => "TG",
@@ -177,50 +177,42 @@ use App::Fasops::Common;
                 },
             ],
         ],
+    );
 
-        #               * **    *   ** *   *
-        [   [   qw{ GATTATCATCACCCCAGCCACATW
-                    GATTTT--TCACTCCATTCGCATA }
+    for my $i ( 0 .. $#data ) {
+        my ( $seq_refs, $except_ref ) = @{ $data[$i] };
+
+        my $result_ref = App::Fasops::Common::get_snps($seq_refs);
+        is_deeply( $result_ref, $except_ref, "get_snps $i" );
+    }
+}
+
+{
+    print "#get_indels\n";
+
+    my @data = (
+
+        #           *   **     * *
+        [   [   qw{ TTAG--GCTGAGAAGC
+                    GTAGCCGCTGA-AGGC }
             ],
-            [   {   all_bases   => "AT",
-                    mutant_to   => "A<->T",
-                    query_base  => "T",
-                    snp_freq    => 1,
-                    snp_occured => 10,
-                    snp_pos     => 5,
-                    target_base => "A",
+            [   {   indel_all_seqs => "--|CC",
+                    indel_end      => 6,
+                    indel_freq     => 1,
+                    indel_length   => 2,
+                    indel_occured  => "01",
+                    indel_seq      => "CC",
+                    indel_start    => 5,
+                    indel_type     => "D",
                 },
-                {   all_bases   => "CT",
-                    mutant_to   => "C<->T",
-                    query_base  => "T",
-                    snp_freq    => 1,
-                    snp_occured => 10,
-                    snp_pos     => 13,
-                    target_base => "C",
-                },
-                {   all_bases   => "GT",
-                    mutant_to   => "G<->T",
-                    query_base  => "T",
-                    snp_freq    => 1,
-                    snp_occured => 10,
-                    snp_pos     => 17,
-                    target_base => "G",
-                },
-                {   all_bases   => "CT",
-                    mutant_to   => "C<->T",
-                    query_base  => "T",
-                    snp_freq    => 1,
-                    snp_occured => 10,
-                    snp_pos     => 18,
-                    target_base => "C",
-                },
-                {   all_bases   => "AG",
-                    mutant_to   => "A<->G",
-                    query_base  => "G",
-                    snp_freq    => 1,
-                    snp_occured => 10,
-                    snp_pos     => 20,
-                    target_base => "A",
+                {   indel_all_seqs => "G|-",
+                    indel_end      => 12,
+                    indel_freq     => 1,
+                    indel_length   => 1,
+                    indel_occured  => "01",
+                    indel_seq      => "G",
+                    indel_start    => 12,
+                    indel_type     => "I",
                 },
             ],
         ],
@@ -229,8 +221,8 @@ use App::Fasops::Common;
     for my $i ( 0 .. $#data ) {
         my ( $seq_refs, $except_ref ) = @{ $data[$i] };
 
-        my $result_ref = App::Fasops::Common::get_snps($seq_refs);
-        is_deeply( $result_ref, $except_ref, "get_snps $i" );
+        my $result_ref = App::Fasops::Common::get_indels($seq_refs);
+        is_deeply( $result_ref, $except_ref, "get_indels $i" );
     }
 }
 
