@@ -8,32 +8,26 @@ use Path::Tiny;
 use IPC::Cmd;
 
 SKIP: {
-    skip "mafft not installed" unless IPC::Cmd::can_run('mafft');
+    skip "mafft not installed", 5 unless IPC::Cmd::can_run('mafft');
 
     my $result;
 
-#    $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas -o stdout)] );
-#    is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 16, 'line count' );
-#    like( ( split /\n\n/, $result->stdout )[0], qr{\-\-\-}s, 'dash added' );
-#
-#    my $section = ( split /\n\n/, $result->stdout )[1];
-#    $section = join "", grep { !/^>/ } split( /\n/, $section );
-#    my $count = $section =~ tr/-/-/;
-#    is( $count, 11, 'count of dashes' );
+    $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas -o stdout)] );
+    is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 16, 'line count' );
+    like( ( split /\n\n/, $result->stdout )[0], qr{\-\-\-}s, 'dash added' );
+
+    my $section = ( split /\n\n/, $result->stdout )[1];
+    $section = join "", grep { !/^>/ } split( /\n/, $section );
+    my $count = $section =~ tr/-/-/;
+    is( $count, 11, 'count of dashes' );
 
     $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas -p 2 -o stdout)] );
     is( scalar( grep {/\S/} split( /\n/, $result->stdout ) ), 16, 'line count' );
     like( ( grep {/\S/} split /\n\n/, $result->stdout )[0], qr{\-\-\-}s, 'dash added' );
-
-    $result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas --outgroup -o stdout)] );
-    like($result->stdout, qr{CA-GT}, 'outgroup trimmed' );
-
-    $result = test_app( 'App::Fasops' => [qw(refine t/refine2.fas -o stdout)] );
-    like($result->stdout, qr{CA--GT}, 'outgroup not trimmed' );
 }
 
 SKIP: {
-    skip "muscle not installed" unless IPC::Cmd::can_run('muscle');
+    skip "muscle not installed", 1 unless IPC::Cmd::can_run('muscle');
 
     my $result = test_app( 'App::Fasops' => [qw(refine t/refine.fas --msa muscle -o stdout)] );
     my $output = $result->stdout;
