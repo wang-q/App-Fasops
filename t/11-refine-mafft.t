@@ -5,9 +5,9 @@ use App::Cmd::Tester;
 
 use App::Fasops;
 use Path::Tiny;
-use IPC::Cmd
+use IPC::Cmd;
 
-    my $result;
+my $result;
 
 SKIP: {
     skip "mafft not installed" unless IPC::Cmd::can_run('mafft');
