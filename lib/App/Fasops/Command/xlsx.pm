@@ -288,7 +288,7 @@ sub paint_variations {
     my %variations     = %{$vars};
     my $section_cur    = $section_start;
     my $col_cursor     = 1;
-    my $section_height = ( scalar( keys @{$name_refs} ) + 1 ) + $opt->{spacing};
+    my $section_height = ( scalar( @{$name_refs} ) + 1 ) + $opt->{spacing};
     my $seq_count      = scalar @{$name_refs};
     $seq_count-- if $opt->{outgroup};
 
