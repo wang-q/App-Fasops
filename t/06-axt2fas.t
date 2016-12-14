@@ -10,11 +10,11 @@ like( $result->stdout, qr{axt2fas}, 'descriptions' );
 
 $result = test_app( 'App::Fasops' => [qw(axt2fas t/example.axt -o stdout)] );
 is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 8, 'line count' );
-like( $result->stdout, qr{target\.X.+query\.gi_29362424.+target\.X.+query.gi_29362377}s,
+like( $result->stdout, qr{target\.I.+query\.scaffold_14.+target\.I.+query.scaffold_17}s,
     'name list' );
 
-$result = test_app( 'App::Fasops' => [qw(axt2fas t/example.axt -t S288c -q Spar -l 50 -o stdout)] );
+$result = test_app( 'App::Fasops' => [qw(axt2fas t/example.axt -t S288c -q RM11_1a -l 1000 -o stdout)] );
 is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 4, 'line count' );
-like( $result->stdout, qr{S288c\.X.+Spar\.gi_29362377}s, 'change names' );
+like( $result->stdout, qr{S288c\.I.+RM11_1a\.scaffold_17}s, 'change names' );
 
 done_testing(5);
