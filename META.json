@@ -40,6 +40,7 @@
             "AlignDB::IntSpan" : "v1.1.0",
             "App::Cmd" : "0.330",
             "App::RL" : "v0.2.23",
+            "Excel::Writer::XLSX" : "0.95",
             "IO::Zlib" : "0",
             "List::MoreUtils" : "0.413",
             "MCE" : "1.810",
@@ -51,6 +52,7 @@
       },
       "test" : {
          "requires" : {
+            "Spreadsheet::XLSX" : "0.15",
             "Test::More" : "0.88",
             "Test::Number::Delta" : "1.06"
          }
