@@ -1,6 +1,9 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+    - Switch to Minilla
+    - Improve test coverage
+    - Without outgroups, consider indels occurred at target
 
 0.5.4  2016-12-15 03:13:17 CST
     - Add `fasops xlsx`
