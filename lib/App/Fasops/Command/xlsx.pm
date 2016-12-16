@@ -304,13 +304,14 @@ sub paint_variations {
 
             for my $i ( 1 .. $seq_count ) {
                 my $base = substr $var->{snp_all_bases}, $i - 1, 1;
-                my $occ  = substr $var->{snp_occured},   $i - 1, 1;
+
+                my $occ
+                    = $var->{snp_occured} eq "unknown"
+                    ? 0
+                    : substr( $var->{snp_occured}, $i - 1, 1 );
 
                 if ( $occ eq "1" ) {
-                    my $bg_idx
-                        = $var->{snp_occured} eq "unknown"
-                        ? "unknown"
-                        : oct( '0b' . $var->{snp_occured} ) % $color_loop;
+                    my $bg_idx     = oct( '0b' . $var->{snp_occured} ) % $color_loop;
                     my $base_color = $base . $bg_idx;
                     $sheet->write( $pos_row + $i,
                         $col_cursor, $base, $format_of->{snp}{$base_color} );
@@ -322,6 +323,7 @@ sub paint_variations {
                 }
             }
 
+            # outgroup bases with no background colors
             if ( $opt->{outgroup} ) {
                 my $base_color = $var->{snp_outgroup_base} . "unknown";
                 $sheet->write(
