@@ -36,6 +36,7 @@ App::Fasops - operating blocked fasta files
          slice: extract alignment slices from a blocked fasta
          split: split blocked fasta files to separate per-alignment files
         subset: extract a subset of species from a blocked fasta
+          xlsx: paint substitutions and indels to an excel file
 
 See C<fasops commands> for usage information.
 

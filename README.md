@@ -1,7 +1,3 @@
-[![Build Status](https://travis-ci.org/wang-q/App-Fasops.svg?branch=master)](https://travis-ci.org/wang-q/App-Fasops)
-[![codecov](https://codecov.io/gh/wang-q/App-Fasops/branch/master/graph/badge.svg)](https://codecov.io/gh/wang-q/App-Fasops)
-[![Cpan version](https://img.shields.io/cpan/v/App-Fasops.svg)](https://metacpan.org/release/App-Fasops)
-
 # NAME
 
 App::Fasops - operating blocked fasta files
@@ -28,6 +24,7 @@ App::Fasops - operating blocked fasta files
          slice: extract alignment slices from a blocked fasta
          split: split blocked fasta files to separate per-alignment files
         subset: extract a subset of species from a blocked fasta
+          xlsx: paint substitutions and indels to an excel file
 
 See `fasops commands` for usage information.
 
