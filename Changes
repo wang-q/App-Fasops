@@ -1,6 +1,8 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+
+0.5.5 2016-12-16T02:52:25Z
     - Switch to Minilla
     - Improve test coverage
     - Without outgroups, consider indels occurred at target
