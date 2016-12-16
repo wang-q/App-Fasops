@@ -50,5 +50,6 @@ cat t/slice.fas | perl -I lib script/fasops slice stdin t/slice.yml --name S288c
 
 cat t/S288cvsYJM789.slice.fas | perl -I lib script/fasops join t/S288cvsRM11_1a.slice.fas stdin t/S288cvsSpar.slice.fas -n S288c -o stdout
 
-cat t/example.fas | perl -I lib script/fasops xlsx stdin
-rm stdin.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin -o example.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin -l 50 --outgroup -o example.outgroup.xlsx
+rm example.xlsx example.outgroup.xlsx

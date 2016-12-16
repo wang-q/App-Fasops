@@ -810,13 +810,13 @@ sub get_snps {
 
         push @sites,
             {
-            snp_pos     => $pos,
-            target_base => $target_base,
-            query_base  => $query_base,
-            all_bases   => $all_bases,
-            mutant_to   => $mutant_to,
-            snp_freq    => $snp_freq,
-            snp_occured => $snp_occured,
+            snp_pos         => $pos,
+            snp_target_base => $target_base,
+            snp_query_base  => $query_base,
+            snp_all_bases   => $all_bases,
+            snp_mutant_to   => $mutant_to,
+            snp_freq        => $snp_freq,
+            snp_occured     => $snp_occured,
             };
     }
 
@@ -830,7 +830,7 @@ sub polarize_snp {
     for my $site ( @{$sites} ) {
         my $outgroup_base = substr $outgroup_seq, $site->{snp_pos} - 1, 1;
 
-        my @nts = split '', $site->{all_bases};
+        my @nts = split '', $site->{snp_all_bases};
         my @class;
         for my $nt (@nts) {
             my $class_bool = 0;
@@ -872,10 +872,10 @@ sub polarize_snp {
             $snp_occured = 'unknown';
         }
 
-        $site->{outgroup_base} = $outgroup_base;
-        $site->{mutant_to}     = $mutant_to;
-        $site->{snp_freq}      = $snp_freq;
-        $site->{snp_occured}   = $snp_occured;
+        $site->{snp_outgroup_base} = $outgroup_base;
+        $site->{snp_mutant_to}     = $mutant_to;
+        $site->{snp_freq}          = $snp_freq;
+        $site->{snp_occured}       = $snp_occured;
     }
 
     return $sites;

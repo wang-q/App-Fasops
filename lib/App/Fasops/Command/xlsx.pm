@@ -303,8 +303,8 @@ sub paint_variations {
             $sheet->write( $pos_row, $col_cursor, $var->{snp_pos}, $format_of->{pos} );
 
             for my $i ( 1 .. $seq_count ) {
-                my $base = substr $var->{all_bases},   $i - 1, 1;
-                my $occ  = substr $var->{snp_occured}, $i - 1, 1;
+                my $base = substr $var->{snp_all_bases}, $i - 1, 1;
+                my $occ  = substr $var->{snp_occured},   $i - 1, 1;
 
                 if ( $occ eq "1" ) {
                     my $bg_idx
@@ -323,9 +323,13 @@ sub paint_variations {
             }
 
             if ( $opt->{outgroup} ) {
-                my $base_color = $var->{outgroup_base} . "unknown";
-                $sheet->write( $pos_row + $seq_count + 1,
-                    $col_cursor, $var->{outgroup_base}, $format_of->{snp}{$base_color} );
+                my $base_color = $var->{snp_outgroup_base} . "unknown";
+                $sheet->write(
+                    $pos_row + $seq_count + 1,
+                    $col_cursor,
+                    $var->{snp_outgroup_base},
+                    $format_of->{snp}{$base_color}
+                );
             }
 
             # increase column cursor
