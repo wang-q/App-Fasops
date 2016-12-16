@@ -25,6 +25,6 @@ my $sheet = $xlsx->{Worksheet}[0];
 
 # row-col
 is( $sheet->{Cells}[1][1]{Val},  "G",  "Cell content 1" );
-is( $sheet->{Cells}[22][3]{Val}, "I1", "Cell content 2" );
+is( $sheet->{Cells}[20][3]{Val}, "I1", "Cell content 2" );
 
 done_testing();

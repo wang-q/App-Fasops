@@ -945,13 +945,13 @@ sub get_indels {
         else {
             for (@indel_seqs) {
 
-                # same as target 'x', not 'o'
+                # same as target '1', not '0'
                 if ( $indel_seqs[0] eq $_ ) {
                     $indel_freq++;
-                    $indel_occured .= '0';
+                    $indel_occured .= '1';
                 }
                 else {
-                    $indel_occured .= '1';
+                    $indel_occured .= '0';
                 }
             }
         }
