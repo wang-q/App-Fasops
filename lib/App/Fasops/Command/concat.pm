@@ -12,8 +12,8 @@ use constant abstract => 'concatenate sequence pieces in blocked fasta files';
 sub opt_spec {
     return (
         [ "outfile|o=s", "Output filename. [stdout] for screen" ],
-        [ "total|i", "Stop when exceed this length", { default => 10_000_000, }, ],
-        [ "relaxed", "output relaxed phylip instead of fasta" ],
+        [ "total|t=i", "Stop when exceed this length", { default => 10_000_000, }, ],
+        [ "relaxed",   "output relaxed phylip instead of fasta" ],
         { show_defaults => 1, }
     );
 }
@@ -70,7 +70,7 @@ sub execute {
     my $all_seq_of = { map { $_ => "" } @names };
     {
         my $content = '';    # content of one block
-        while (1) {
+    BLOCK: while (1) {
             last if $in_fh->eof and $content eq '';
             my $line = '';
             if ( !$in_fh->eof ) {
@@ -91,6 +91,10 @@ sub execute {
                         # fill unpresented names with ------
                         $all_seq_of->{$name} .= '-' x $align_length;
                     }
+                }
+
+                if ( $opt->{total} and $opt->{total} < length $all_seq_of->{ $names[0] } ) {
+                    last BLOCK;
                 }
             }
             else {

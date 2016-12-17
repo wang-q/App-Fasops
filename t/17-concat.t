@@ -31,4 +31,9 @@ is( length( ( grep {/\S/} split( /\n/, $result->stdout ) )[2] ),
     'line length'
 );
 
+$result = test_app(
+    'App::Fasops' => [qw(concat t/example.fas t/example.name.list --total 100 -o stdout)] );
+is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 4, 'line count' );
+is( length( ( grep {/\S/} split( /\n/, $result->stdout ) )[3] ), 239 - 63, 'line length' );
+
 done_testing();
