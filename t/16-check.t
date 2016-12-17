@@ -8,13 +8,13 @@ use App::Fasops;
 my $result = test_app( 'App::Fasops' => [qw(help check)] );
 like( $result->stdout, qr{check}, 'descriptions' );
 
-$result = test_app( 'App::Fasops' => [qw(subset)] );
+$result = test_app( 'App::Fasops' => [qw(check)] );
 like( $result->error, qr{need .+input file}, 'need infile' );
 
-$result = test_app( 'App::Fasops' => [qw(subset t/not_exists)] );
+$result = test_app( 'App::Fasops' => [qw(check t/not_exists)] );
 like( $result->error, qr{need two input files}, 'need infiles' );
 
-$result = test_app( 'App::Fasops' => [qw(subset t/not_exists t/not_exists)] );
+$result = test_app( 'App::Fasops' => [qw(check t/not_exists t/not_exists)] );
 like( $result->error, qr{doesn't exist}, 'infile not exists' );
 
 SKIP: {
