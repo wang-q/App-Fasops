@@ -2,6 +2,9 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.5.9 2016-12-17T18:06:32Z
+    - Close $out_fh and $in_fh at once
+
 0.5.8 2016-12-17T15:06:56Z
     - Add `fasops concat`
 
