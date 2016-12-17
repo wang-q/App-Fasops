@@ -132,7 +132,7 @@ sub check_seq {
     }
 
     my $location;
-    if ( $info->{end} ) {
+    if ( $info->{end} and $info->{start} < $info->{end} ) {
         $location = sprintf "%s:%s-%s", $info->{chr}, $info->{start}, $info->{end};
     }
     else {
