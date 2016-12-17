@@ -15,12 +15,12 @@ use constant abstract => 'realign blocked fasta file with external programs';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "outgroup",    "Has outgroup at the end of blocks.", ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "outgroup",    "Has outgroup at the end of blocks", ],
         [ "parallel|p=i", "run in parallel mode", { default => 1 }, ],
         [ "msa=s",        "Aligning program",     { default => "mafft" }, ],
         [   "quick",
-            "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs.",
+            "Quick mode, only aligning indel adjacent regions. Suitable for multiz outputs",
         ],
         [ "pad=i",  "In quick mode, enlarge indel regions", { default => 50 }, ],
         [ "fill=i", "In quick mode, join indel regions",    { default => 50 }, ],

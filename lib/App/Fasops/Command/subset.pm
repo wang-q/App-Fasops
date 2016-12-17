@@ -11,9 +11,9 @@ use constant abstract => 'extract a subset of species from a blocked fasta';
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen." ],
-        [ "first",       "Always keep the first species." ],
-        [ "required",    "Skip blocks not containing all the names." ],
+        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "first",       "Always keep the first species" ],
+        [ "required",    "Skip blocks not containing all the names" ],
         { show_defaults => 1, }
     );
 }
