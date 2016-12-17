@@ -26,6 +26,7 @@ App::Fasops - operating blocked fasta files
 
        axt2fas: convert axt to blocked fasta
          check: check genome locations in (blocked) fasta headers
+        concat: concatenate sequence pieces in blocked fasta files
         covers: scan blocked fasta files and output covers on chromosomes
           join: join multiple blocked fasta files by common target
          links: scan blocked fasta files and output bi/multi-lateral range links
