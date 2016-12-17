@@ -67,6 +67,14 @@ sub execute {
         $in_fh = IO::Zlib->new( $args->[0], "rb" );
     }
 
+    my $out_fh;
+    if ( lc( $opt->{outfile} ) eq "stdout" ) {
+        $out_fh = *STDOUT{IO};
+    }
+    else {
+        open $out_fh, ">", $opt->{outfile};
+    }
+
     my $all_seq_of = { map { $_ => "" } @names };
     {
         my $content = '';    # content of one block
@@ -102,15 +110,6 @@ sub execute {
             }
         }
     }
-    $in_fh->close;
-
-    my $out_fh;
-    if ( lc( $opt->{outfile} ) eq "stdout" ) {
-        $out_fh = *STDOUT{IO};
-    }
-    else {
-        open $out_fh, ">", $opt->{outfile};
-    }
 
     my $all_seq_length = length $all_seq_of->{ $names[0] };
     if ( $opt->{relaxed} ) {
@@ -128,6 +127,7 @@ sub execute {
     }
 
     close $out_fh;
+    $in_fh->close;
 }
 
 1;
