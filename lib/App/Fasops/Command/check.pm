@@ -59,8 +59,6 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
-    my @names = @{ App::RL::Common::read_names( $args->[1] ) };
-
     my $in_fh;
     if ( lc $args->[0] eq "stdin" ) {
         $in_fh = *STDIN{IO};
