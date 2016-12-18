@@ -179,8 +179,7 @@ sub seq_length {
 sub indel_intspan {
     my $seq = shift;
 
-    #@type AlignDB::IntSpan
-    my $intspan = AlignDB::IntSpan->new;
+    my $intspan = AlignDB::IntSpan->new();
     my $length  = length($seq);
 
     my $offset = 0;
@@ -214,8 +213,7 @@ sub indel_intspan {
 sub seq_intspan {
     my $seq = shift;
 
-    #@type AlignDB::IntSpan
-    my $intspan = AlignDB::IntSpan->new;
+    my $intspan = AlignDB::IntSpan->new();
     my $length  = length($seq);
     $intspan->add_pair( 1, $length );
 
@@ -268,13 +266,16 @@ sub align_seqs {
     }
 
     # temp in and out
-    my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX");
+    #@type Path::Tiny
+    my $temp_in = Path::Tiny->tempfile("seq_in_XXXXXXXX");
+
+    #@type Path::Tiny
     my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX");
 
     # msa may change the order of sequences
     my @indexes = 0 .. scalar( @{$seq_refs} - 1 );
     {
-        my $fh = $temp_in->openw;
+        my $fh = $temp_in->openw();
         for my $i (@indexes) {
             printf {$fh} ">seq_%d\n", $i;
             printf {$fh} "%s\n",      $seq_refs->[$i];
@@ -346,7 +347,7 @@ sub align_seqs_quick {
     my $seq_count = scalar @aligned;
 
     # all indel regions
-    my $realign_region = AlignDB::IntSpan->new;
+    my $realign_region = AlignDB::IntSpan->new();
     for my $seq (@aligned) {
         my $indel_intspan = indel_intspan($seq);
         $indel_intspan = $indel_intspan->pad($indel_pad);
@@ -389,7 +390,7 @@ sub trim_pure_dash {
 
     return unless $seq_length;
 
-    my $trim_region = AlignDB::IntSpan->new;
+    my $trim_region = AlignDB::IntSpan->new();
 
     for my $pos ( 1 .. $seq_length ) {
         my @bases;
@@ -440,7 +441,7 @@ sub trim_outgroup {
     my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
     my $intersect_set = AlignDB::IntSpan::intersect(@indel_intspans);
 
-    my $trim_region = AlignDB::IntSpan->new;
+    my $trim_region = AlignDB::IntSpan->new();
     for my $span ( $union_set->runlists ) {
         if ( $intersect_set->superset($span) ) {
             $trim_region->add($span);
@@ -492,7 +493,7 @@ sub trim_complex_indel {
     my $union_set     = AlignDB::IntSpan::union(@indel_intspans);
     my $intersect_set = AlignDB::IntSpan::intersect(@indel_intspans);
 
-    my $complex_region = AlignDB::IntSpan->new;
+    my $complex_region = AlignDB::IntSpan->new();
     for ( reverse $intersect_set->spans ) {
         my $seg_start = $_->[0];
         my $seg_end   = $_->[1];
@@ -886,7 +887,7 @@ sub get_indels {
 
     my $seq_count = scalar @{$seq_refs};
 
-    my $indel_set = AlignDB::IntSpan->new;
+    my $indel_set = AlignDB::IntSpan->new();
     for my $i ( 0 .. $seq_count - 1 ) {
         my $seq_indel_set = indel_intspan( $seq_refs->[$i] );
         $indel_set->merge($seq_indel_set);
@@ -989,7 +990,7 @@ sub polarize_indel {
 
         my ( $indel_type, $indel_occured, $indel_freq );
 
-        my $indel_set = AlignDB::IntSpan->new("$site->{indel_start}-$site->{indel_end}");
+        my $indel_set = AlignDB::IntSpan->new->add_pair( $site->{indel_start}, $site->{indel_end} );
 
         # this line is different to previous subroutines
         my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $indel_outgroup_seq );
