@@ -2,6 +2,10 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+0.5.10 2016-12-18T20:19:59Z
+    - Remove dependency on List::MoreUtils
+    - Move calc_ld() here
+
 0.5.9 2016-12-17T18:06:32Z
     - Close $out_fh and $in_fh at once
 
