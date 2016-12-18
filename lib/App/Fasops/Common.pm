@@ -1207,7 +1207,9 @@ sub calc_ld {
     my $strA = shift;
     my $strB = shift;
 
-    if ( length $strA != length $strB ) {
+    my $size = length $strA;
+
+    if ( $size != length $strB ) {
         Carp::confess "Lengths not equal for [$strA] and [$strA]\n";
         return;
     }
@@ -1219,13 +1221,11 @@ sub calc_ld {
         }
     }
 
-    my $size = length $strA;
-
     my $A_count = $strA =~ tr/1/1/;
     my $fA      = $A_count / $size;
     my $fa      = 1 - $fA;
 
-    my $B_count = $strB =~ tr/0/0/;
+    my $B_count = $strB =~ tr/1/1/;
     my $fB      = $B_count / $size;
     my $fb      = 1 - $fB;
 
