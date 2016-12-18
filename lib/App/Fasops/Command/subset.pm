@@ -89,7 +89,7 @@ sub execute {
                 my @needed_names = @names;
                 if ( $opt->{first} ) {
                     my $first = ( keys %{$info_of} )[0];
-                    @needed_names = List::MoreUtils::PP::uniq( $first, @needed_names );
+                    @needed_names = App::Fasops::Common::uniq( $first, @needed_names );
                 }
 
                 if ( $opt->{required} ) {

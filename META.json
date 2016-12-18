@@ -47,7 +47,7 @@
             "App::RL" : "v0.2.23",
             "Excel::Writer::XLSX" : "0.95",
             "IO::Zlib" : "0",
-            "List::MoreUtils" : "0.413",
+            "List::Util" : "0",
             "MCE" : "1.810",
             "Path::Tiny" : "0.076",
             "Tie::IxHash" : "1.23",

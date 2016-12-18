@@ -1,6 +1,6 @@
 requires 'App::Cmd', '0.330';
 requires 'AlignDB::IntSpan', '1.1.0';
-requires 'List::MoreUtils', '0.413';
+requires 'List::Util';
 requires 'MCE', '1.810';
 requires 'IO::Zlib';
 requires 'Path::Tiny', '0.076';

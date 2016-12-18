@@ -108,12 +108,12 @@ sub execute {
                         my @row = @{ $matrix[$i] };
                         $row[$i] = 999;    # remove the score (zero) of this item
                         my $min = List::Util::min(@row);
-                        my $min_idx = List::MoreUtils::PP::firstidx { $_ == $min } @row;
+                        my $min_idx = App::Fasops::Common::firstidx { $_ == $min } @row;
 
                         # to remove duplications of a:b and b:a
                         push @pair_ary, join ":", sort { $a <=> $b } ( $i, $min_idx );
                     }
-                    @pair_ary = List::MoreUtils::PP::uniq(@pair_ary);
+                    @pair_ary = App::Fasops::Common::uniq(@pair_ary);
 
                     for (@pair_ary) {
                         my ( $i, $j ) = split ":";
