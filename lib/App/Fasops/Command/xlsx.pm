@@ -63,6 +63,7 @@ sub validate_args {
 sub execute {
     my ( $self, $opt, $args ) = @_;
 
+    #@type IO::Handle
     my $in_fh;
     if ( lc $args->[0] eq "stdin" ) {
         $in_fh = *STDIN{IO};
