@@ -5,17 +5,55 @@ use autodie;
 
 use 5.010001;
 
-use Carp;
+use Carp qw();
 use IO::Zlib;
 use IPC::Cmd;
 use List::Util;
-use List::MoreUtils::PP;
 use Path::Tiny;
 use Tie::IxHash;
-use YAML::Syck;
+use YAML::Syck qw();
 
 use AlignDB::IntSpan;
 use App::RL::Common;
+
+sub mean {
+    @_ = grep { defined $_ } @_;
+    return 0 unless @_;
+    return $_[0] unless @_ > 1;
+    return List::Util::sum(@_) / scalar(@_);
+}
+
+sub any (&@) {
+    my $f = shift;
+    for (@_) {
+        return 1 if $f->();
+    }
+    return 0;
+}
+
+sub all (&@) {
+    my $f = shift;
+    for (@_) {
+        return 0 unless $f->();
+    }
+    return 1;
+}
+
+sub uniq (@) {
+    my %seen = ();
+    my $k;
+    my $seen_undef;
+    return grep { defined $_ ? not $seen{ $k = $_ }++ : not $seen_undef++ } @_;
+}
+
+sub firstidx (&@) {
+    my $f = shift;
+    for my $i ( 0 .. $#_ ) {
+        local *_ = \$_[$i];
+        return $i if $f->();
+    }
+    return -1;
+}
 
 sub read_replaces {
     my $file = shift;
@@ -262,7 +300,7 @@ sub align_seqs {
     }
 
     if ( !defined $bin ) {
-        confess "Could not find the executable for $aln_prog\n";
+        Carp::confess "Could not find the executable for $aln_prog\n";
     }
 
     # temp in and out
@@ -399,7 +437,7 @@ sub trim_pure_dash {
             push @bases, $base;
         }
 
-        if ( List::MoreUtils::PP::all { $_ eq '-' } @bases ) {
+        if ( all { $_ eq '-' } @bases ) {
             $trim_region->add($pos);
         }
     }
@@ -575,13 +613,6 @@ sub read_fasta {
     return \%seq_of;
 }
 
-sub mean {
-    @_ = grep { defined $_ } @_;
-    return 0 unless @_;
-    return $_[0] unless @_ > 1;
-    return List::Util::sum(@_) / scalar(@_);
-}
-
 sub calc_gc_ratio {
     my $seq_refs = shift;
 
@@ -711,18 +742,18 @@ sub multi_seq_stat {
             my $base = substr( $seq_refs->[$i], $pos - 1, 1 );
             push @bases, $base;
         }
-        @bases = List::MoreUtils::PP::uniq(@bases);
+        @bases = uniq(@bases);
 
-        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
+        if ( all { $_ =~ /[agct]/i } @bases ) {
             $comparable_bases++;
-            if ( List::MoreUtils::PP::all { $_ eq $bases[0] } @bases ) {
+            if ( all { $_ eq $bases[0] } @bases ) {
                 $identities++;
             }
             else {
                 $differences++;
             }
         }
-        elsif ( List::MoreUtils::PP::any { $_ eq '-' } @bases ) {
+        elsif ( any { $_ eq '-' } @bases ) {
             $gaps++;
         }
         else {
@@ -765,8 +796,8 @@ sub get_snps {
             push @bases, $base;
         }
 
-        if ( List::MoreUtils::PP::all { $_ =~ /[agct]/i } @bases ) {
-            if ( List::MoreUtils::PP::any { $_ ne $bases[0] } @bases ) {
+        if ( all { $_ =~ /[agct]/i } @bases ) {
+            if ( any { $_ ne $bases[0] } @bases ) {
                 $snp_bases_of->{$pos} = \@bases;
             }
         }
@@ -784,7 +815,7 @@ sub get_snps {
         my $mutant_to;
         my $snp_freq = 0;
         my $snp_occured;
-        my @class = List::MoreUtils::PP::uniq(@bases);
+        my @class = uniq(@bases);
         if ( scalar @class < 2 ) {
             Carp::confess "no snp\n";
         }
@@ -907,7 +938,7 @@ sub get_indels {
         my $indel_all_seqs = join "|", @indel_seqs;
 
         my $indel_type;
-        my @uniq_indel_seqs = List::MoreUtils::PP::uniq(@indel_seqs);
+        my @uniq_indel_seqs = uniq(@indel_seqs);
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -993,7 +1024,7 @@ sub polarize_indel {
         my $indel_set = AlignDB::IntSpan->new->add_pair( $site->{indel_start}, $site->{indel_end} );
 
         # this line is different to previous subroutines
-        my @uniq_indel_seqs = List::MoreUtils::PP::uniq( @indel_seqs, $indel_outgroup_seq );
+        my @uniq_indel_seqs = uniq( @indel_seqs, $indel_outgroup_seq );
 
         # seqs with least '-' char wins
         my ($indel_seq) = map { $_->[0] }
@@ -1162,4 +1193,90 @@ sub align_to_chr {
     return $chr_pos;
 }
 
+#pod =method calc_ld
+#pod
+#pod     my ( $r, $dprime ) = App::Fasops::Common::calc_ld("111000", "111000");
+#pod
+#pod Returns the r and D' (Hill and Robertson, 1968) of two polymorphic sites.
+#pod
+#pod L<https://cran.r-project.org/web/packages/genetics/genetics.pdf>
+#pod
+#pod =cut
+
+sub calc_ld {
+    my $strA = shift;
+    my $strB = shift;
+
+    if ( length $strA != length $strB ) {
+        Carp::confess "Lengths not equal for [$strA] and [$strA]\n";
+        return;
+    }
+
+    for ( $strA, $strB ) {
+        if (/[^10]/) {
+            Carp::confess "[$_] contains illegal chars\n";
+            return;
+        }
+    }
+
+    my $size = length $strA;
+
+    my $A_count = $strA =~ tr/1/1/;
+    my $fA      = $A_count / $size;
+    my $fa      = 1 - $fA;
+
+    my $B_count = $strB =~ tr/0/0/;
+    my $fB      = $B_count / $size;
+    my $fb      = 1 - $fB;
+
+    if ( any { $_ == 0 } ( $fA, $fa, $fB, $fb ) ) {
+        return ( undef, undef );
+    }
+
+    # '1' in strA and '1' in strB as fAB
+    my ( $AB_count, $fAB ) = ( 0, 0 );
+    for my $i ( 1 .. $size ) {
+        my $ichar = substr $strA, $i - 1, 1;
+        my $schar = substr $strB, $i - 1, 1;
+        if ( $ichar eq '1' and $schar eq '1' ) {
+            $AB_count++;
+        }
+    }
+    $fAB = $AB_count / $size;
+
+    my $DAB = $fAB - $fA * $fB;
+
+    my ( $r, $dprime );
+    $r = $DAB / sqrt( $fA * $fa * $fB * $fb );
+
+    if ( $DAB < 0 ) {
+        $dprime = $DAB / List::Util::min( $fA * $fB, $fa * $fb );
+    }
+    else {
+        $dprime = $DAB / List::Util::min( $fA * $fb, $fa * $fB );
+    }
+
+    return ( $r, $dprime );
+}
+
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+App::Fasops::Common - collection of common subroutines
+
+=head1 SYNOPSIS
+
+    use App::Fasops::Common;
+
+    my $length = App::Fasops::Common::seq_length("AGCTTT---CCA");
+
+=head1 METHODS
+
+=cut
