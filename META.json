@@ -50,6 +50,7 @@
             "List::Util" : "0",
             "MCE" : "1.810",
             "Path::Tiny" : "0.076",
+            "Text::CSV_XS" : "1.21",
             "Tie::IxHash" : "1.23",
             "YAML::Syck" : "1.29",
             "perl" : "5.010001"

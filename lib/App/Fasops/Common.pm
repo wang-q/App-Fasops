@@ -16,7 +16,7 @@ use YAML::Syck qw();
 use AlignDB::IntSpan;
 use App::RL::Common;
 
-sub mean {
+sub mean (@) {
     @_ = grep { defined $_ } @_;
     return 0 unless @_;
     return $_[0] unless @_ > 1;
@@ -1193,16 +1193,6 @@ sub align_to_chr {
     return $chr_pos;
 }
 
-#pod =method calc_ld
-#pod
-#pod     my ( $r, $dprime ) = App::Fasops::Common::calc_ld("111000", "111000");
-#pod
-#pod Returns the r and D' (Hill and Robertson, 1968) of two polymorphic sites.
-#pod
-#pod L<https://cran.r-project.org/web/packages/genetics/genetics.pdf>
-#pod
-#pod =cut
-
 sub calc_ld {
     my $strA = shift;
     my $strB = shift;
@@ -1278,5 +1268,13 @@ App::Fasops::Common - collection of common subroutines
     my $length = App::Fasops::Common::seq_length("AGCTTT---CCA");
 
 =head1 METHODS
+
+=method calc_ld
+
+    my ( $r, $dprime ) = App::Fasops::Common::calc_ld("111000", "111000");
+
+Returns the r and D' (Hill and Robertson, 1968) of two polymorphic sites.
+
+L<https://cran.r-project.org/web/packages/genetics/genetics.pdf>
 
 =cut
