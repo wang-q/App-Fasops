@@ -1,6 +1,7 @@
 Revision history for App-Fasops
 
 {{$NEXT}}
+    - Add `fasops stat`
 
 0.5.10 2016-12-18T20:19:59Z
     - Remove dependency on List::MoreUtils

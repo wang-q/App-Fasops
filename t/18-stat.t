@@ -20,6 +20,10 @@ $result = test_app( 'App::Fasops' => [ qw(stat t/example.fas -o stdout) ] );
 is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 4, 'line count' );
 like( $result->stdout, qr{,6\n}, 'indels without outgroup' );
 
+$result = test_app( 'App::Fasops' => [ qw(stat t/example.fas -l 50 -o stdout) ] );
+is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 3, 'line count' );
+like( $result->stdout, qr{,6\n}, 'indels without outgroup' );
+
 # outgroup
 $result = test_app( 'App::Fasops' => [ qw(stat t/example.fas --outgroup -o stdout) ] );
 is( ( scalar grep {/\S/} split( /\n/, $result->stdout ) ), 4, 'line count' );

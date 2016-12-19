@@ -14,7 +14,6 @@ sub opt_spec {
     return (
         [ "outfile|o=s", "output filename. [stdout] for screen" ],
         [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
-        [ "all",        "only write whole genome stats." ],
         [ 'outgroup',   'alignments have an outgroup', ],
         { show_defaults => 1, }
     );
@@ -126,8 +125,6 @@ sub execute {
 
     close $out_fh;
     $in_fh->close;
-
-    return;
 }
 
 1;
