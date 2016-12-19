@@ -1269,7 +1269,7 @@ App::Fasops::Common - collection of common subroutines
 
 =head1 METHODS
 
-=method calc_ld
+=head2 calc_ld
 
     my ( $r, $dprime ) = App::Fasops::Common::calc_ld("111000", "111000");
 
