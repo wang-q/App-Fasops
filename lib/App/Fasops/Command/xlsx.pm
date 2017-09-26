@@ -19,8 +19,8 @@ sub opt_spec {
         [ 'colors=i',   'number of colors',                  { default => 15 }, ],
         [ 'section=i', 'start section', { default => 1, hidden => 1 }, ],
         [ 'outgroup',  'alignments have an outgroup', ],
-        [ 'nosingle',  'omit singleton SNPs', ],
         [ 'noindel',   'omit indels', ],
+        [ 'nosingle',  'omit singleton SNPs and indels', ],
         [ 'nocomplex', 'omit complex SNPs and indels', ],
         { show_defaults => 1, }
     );
@@ -265,6 +265,10 @@ sub get_variations {
     my %variations;
     for my $site ( @{$indel_sites} ) {
         if ( $opt->{nocomplex} and $site->{indel_freq} == -1 ) {
+            next;
+        }
+
+        if ( $opt->{nosingle} and $site->{indel_freq} <= 1 ) {
             next;
         }
 
