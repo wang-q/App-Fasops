@@ -46,6 +46,8 @@ cat t/example.fas | perl -I lib/ script/fasops refine stdin --msa mafft -o stdou
 perl -I lib/ script/fasops refine t/example.fas --msa none --chop 10 -o stdout
 
 cat t/example.fas | perl -I lib script/fasops split stdin -o stdout
+perl -I lib script/fasops split t/example.fas --simple -o stdout
+perl -I lib/ t/12-split.t
 
 cat t/slice.fas | perl -I lib script/fasops slice stdin t/slice.yml --name S288c -o stdout
 

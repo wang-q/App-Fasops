@@ -14,8 +14,9 @@ sub abstract {
 sub opt_spec {
     return (
         [ "outdir|o=s", "Output location, [stdout] for screen" ],
-        [ "rm|r",       "If outdir exists, remove it before operating." ],
-        [ "chr",        "Split by chromosomes." ],
+        [ "rm|r",       "if outdir exists, remove it before operating." ],
+        [ "chr",        "split by chromosomes." ],
+        [ "simple",     "only keep names in headers" ],
         { show_defaults => 1, }
     );
 }
@@ -92,7 +93,12 @@ sub execute {
 
                 if ( lc( $opt->{outdir} ) eq "stdout" ) {
                     for my $key ( keys %{$info_of} ) {
-                        printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        if ( $opt->{simple} ) {
+                            printf ">%s\n", $info_of->{$key}{name};
+                        }
+                        else {
+                            printf ">%s\n", App::RL::Common::encode_header( $info_of->{$key} );
+                        }
                         print $info_of->{$key}{seq} . "\n";
                     }
                 }
@@ -113,8 +119,13 @@ sub execute {
 
                     open my $out_fh, ">>", $filename;
                     for my $key ( keys %{$info_of} ) {
-                        printf {$out_fh} ">%s\n",
-                            App::RL::Common::encode_header( $info_of->{$key} );
+                        if ( $opt->{simple} ) {
+                            printf {$out_fh} ">%s\n", $info_of->{$key}{name};
+                        }
+                        else {
+                            printf {$out_fh} ">%s\n",
+                                App::RL::Common::encode_header( $info_of->{$key} );
+                        }
                         print {$out_fh} $info_of->{$key}{seq} . "\n";
                     }
                     print {$out_fh} "\n";
