@@ -1249,6 +1249,49 @@ sub calc_ld {
     return ( $r, $dprime );
 }
 
+sub poa_consensus {
+    my $seq_refs = shift;
+
+    my $aln_prog = "poa";
+
+    # temp in and out
+    my $temp_in  = Path::Tiny->tempfile("seq_in_XXXXXXXX");
+    my $temp_out = Path::Tiny->tempfile("seq_out_XXXXXXXX");
+
+    # msa may change the order of sequences
+    my @indexes = 0 .. scalar( @{$seq_refs} - 1 );
+    {
+        my $fh = $temp_in->openw();
+        for my $i (@indexes) {
+            printf {$fh} ">seq_%d\n", $i;
+            printf {$fh} "%s\n",      $seq_refs->[$i];
+        }
+        close $fh;
+    }
+
+    my @args;
+    {
+        push @args, "-hb";
+        push @args, "-read_fasta " . $temp_in->absolute->stringify;
+        push @args, "-clustal " . $temp_out->absolute->stringify;
+        push @args, File::ShareDir::dist_file( 'App-Fasops', 'poa-blosum80.mat' );
+    }
+
+    my $cmd_line = join " ", ( $aln_prog, @args );
+    my $ok = IPC::Cmd::run( command => $cmd_line );
+
+    if ( !$ok ) {
+        Carp::confess("Calling [$aln_prog] failed\n");
+    }
+
+    my $consensus = join "", grep {/^CONSENS0/} $temp_out->lines( { chomp => 1, } );
+    $consensus =~ s/CONSENS0//g;
+    $consensus =~ s/\s//g;
+    $consensus =~ s/-//g;
+
+    return $consensus;
+}
+
 1;
 
 __END__
