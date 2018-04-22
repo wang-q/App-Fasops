@@ -6,10 +6,11 @@ use autodie;
 use 5.010001;
 
 use Carp qw();
+use File::ShareDir qw();
 use IO::Zlib;
-use IPC::Cmd;
+use IPC::Cmd qw();
 use List::Util;
-use Path::Tiny;
+use Path::Tiny qw();
 use Tie::IxHash;
 use YAML::Syck qw();
 

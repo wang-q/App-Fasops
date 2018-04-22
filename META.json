@@ -46,6 +46,7 @@
             "App::Cmd" : "0.330",
             "App::RL" : "v0.2.23",
             "Excel::Writer::XLSX" : "0.95",
+            "File::ShareDir" : "1.102",
             "IO::Zlib" : "0",
             "List::Util" : "0",
             "MCE" : "1.810",

@@ -57,7 +57,7 @@ use Test::Number::Delta within => 1e-2;
     for my $i ( 0 .. $#data ) {
         my ( $seq_refs, $expect ) = @{ $data[$i] };
 
-        my $result = App::Anchr::Common::poa_consensus($seq_refs);
+        my $result = App::Fasops::Common::poa_consensus($seq_refs);
         is( $result, $expect, "poa $i" );
     }
 }
