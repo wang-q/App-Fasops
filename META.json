@@ -48,13 +48,14 @@
             "Excel::Writer::XLSX" : "0.95",
             "File::ShareDir" : "1.102",
             "IO::Zlib" : "0",
+            "IPC::Cmd" : "0",
             "List::Util" : "0",
             "MCE" : "1.810",
             "Path::Tiny" : "0.076",
             "Text::CSV_XS" : "1.21",
             "Tie::IxHash" : "1.23",
             "YAML::Syck" : "1.29",
-            "perl" : "5.010001"
+            "perl" : "5.018001"
          }
       },
       "test" : {
