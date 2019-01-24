@@ -2,6 +2,8 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+    - Move subroutines to Common.pm
+
 0.6.0 2018-04-22T14:40:50Z
     - Add `fasops consensus`
     - Add poa_consensus() to Common.pm
