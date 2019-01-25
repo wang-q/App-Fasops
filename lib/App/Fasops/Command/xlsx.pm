@@ -14,7 +14,7 @@ sub abstract {
 
 sub opt_spec {
     return (
-        [ "outfile|o=s", "Output filename. [stdout] for screen" ],
+        [ "outfile|o=s", "Output filename" ],
         [ "length|l=i", "the threshold of alignment length", { default => 1 } ],
         [ 'wrap=i',     'wrap length',                       { default => 50 }, ],
         [ 'spacing=i',  'wrapped line spacing',              { default => 1 }, ],
@@ -37,7 +37,7 @@ sub description {
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= <<'MARKDOWN';
 
-* <infiles> are paths to axt files, .axt.gz is supported
+* <infiles> are paths to axt files, .fas.gz is supported
 * infile == stdin means reading from STDIN
 
 MARKDOWN
@@ -121,9 +121,8 @@ sub execute {
             $max_name_length = List::Util::max( $max_name_length, map {length} @full_names );
 
             # including indels and snps
-            my $vars = App::Fasops::Common::get_vars( $seq_refs, $opt );
-            $opt->{section} = App::Fasops::Common::paint_vars( $worksheet, $format_of, $opt, $vars,
-                \@full_names );
+            my $vars = get_vars( $seq_refs, $opt );
+            $opt->{section} = paint_vars( $worksheet, $format_of, $opt, $vars, \@full_names );
 
         }
         else {
@@ -242,6 +241,242 @@ sub create_formats {
     }
 
     return $format_of;
+}
+
+# store all variations
+sub get_vars {
+    my $seq_refs = shift;
+    my $opt      = shift;
+
+    # outgroup
+    my $out_seq;
+    if ( $opt->{outgroup} ) {
+        $out_seq = pop @{$seq_refs};
+    }
+
+    my $seq_count = scalar @{$seq_refs};
+    if ( $seq_count < 2 ) {
+        Carp::confess "Too few sequences [$seq_count]\n";
+    }
+
+    my $indel_sites = App::Fasops::Common::get_indels($seq_refs);
+    if ( $opt->{outgroup} ) {
+        App::Fasops::Common::polarize_indel( $indel_sites, $out_seq );
+    }
+
+    my $snp_sites = App::Fasops::Common::get_snps($seq_refs);
+    if ( $opt->{outgroup} ) {
+        App::Fasops::Common::polarize_snp( $snp_sites, $out_seq );
+    }
+
+    my %variations;
+    for my $site ( @{$indel_sites} ) {
+        if ( $opt->{nocomplex} and $site->{indel_freq} == -1 ) {
+            next;
+        }
+
+        if ( $opt->{nosingle} and $site->{indel_freq} <= 1 ) {
+            next;
+        }
+
+        if ( $opt->{noindel} ) {
+            next;
+        }
+
+        $site->{var_type} = 'indel';
+        $variations{ $site->{indel_start} } = $site;
+    }
+
+    for my $site ( @{$snp_sites} ) {
+        if ( $opt->{nocomplex} and $site->{snp_freq} == -1 ) {
+            next;
+        }
+
+        if ( $opt->{nosingle} and $site->{snp_freq} <= 1 ) {
+            next;
+        }
+
+        $site->{var_type} = 'snp';
+        $variations{ $site->{snp_pos} } = $site;
+    }
+
+    return \%variations;
+}
+
+# write excel
+sub paint_vars {
+
+    #@type Excel::Writer::XLSX::Worksheet
+    my $sheet     = shift;
+    my $format_of = shift;
+    my $opt       = shift;
+    my $vars      = shift;
+    my $name_refs = shift;
+
+    my $section_start = $opt->{section};
+    my $color_loop    = $opt->{colors};
+
+    my %variations     = %{$vars};
+    my $section_cur    = $section_start;
+    my $col_cursor     = 1;
+    my $section_height = ( scalar( @{$name_refs} ) + 1 ) + $opt->{spacing};
+    my $seq_count      = scalar @{$name_refs};
+    $seq_count-- if $opt->{outgroup};
+
+    for my $pos ( sort { $a <=> $b } keys %variations ) {
+        my $var = $variations{$pos};
+        my $pos_row = $section_height * ( $section_cur - 1 );
+
+        # write SNPs
+        if ( $var->{var_type} eq 'snp' ) {
+
+            # write position
+            $sheet->write( $pos_row, $col_cursor, $var->{snp_pos}, $format_of->{pos} );
+
+            for my $i ( 1 .. $seq_count ) {
+                my $base = substr $var->{snp_all_bases}, $i - 1, 1;
+
+                my $occ
+                    = $var->{snp_occured} eq "unknown"
+                    ? 0
+                    : substr( $var->{snp_occured}, $i - 1, 1 );
+
+                if ( $occ eq "1" ) {
+                    my $bg_idx     = oct( '0b' . $var->{snp_occured} ) % $color_loop;
+                    my $base_color = $base . $bg_idx;
+                    $sheet->write( $pos_row + $i,
+                        $col_cursor, $base, $format_of->{snp}{$base_color} );
+                }
+                else {
+                    my $base_color = $base . "unknown";
+                    $sheet->write( $pos_row + $i,
+                        $col_cursor, $base, $format_of->{snp}{$base_color} );
+                }
+            }
+
+            # outgroup bases with no background colors
+            if ( $opt->{outgroup} ) {
+                my $base_color = $var->{snp_outgroup_base} . "unknown";
+                $sheet->write(
+                    $pos_row + $seq_count + 1,
+                    $col_cursor,
+                    $var->{snp_outgroup_base},
+                    $format_of->{snp}{$base_color}
+                );
+            }
+
+            # increase column cursor
+            $col_cursor++;
+        }
+
+        # write indels
+        if ( $var->{var_type} eq 'indel' ) {
+
+            # how many column does this indel take up
+            my $col_taken = List::Util::min( $var->{indel_length}, 3 );
+
+            # if exceed the wrap limit, start a new section
+            if ( $col_cursor + $col_taken > $opt->{wrap} ) {
+                $col_cursor = 1;
+                $section_cur++;
+                $pos_row = $section_height * ( $section_cur - 1 );
+            }
+
+            my $indel_string = "$var->{indel_type}$var->{indel_length}";
+
+            my $bg_idx = 'unknown';
+            if ( $var->{indel_occured} ne 'unknown' ) {
+                $bg_idx = oct( '0b' . $var->{indel_occured} ) % $color_loop;
+            }
+
+            for my $i ( 1 .. $seq_count ) {
+                my $flag = 0;
+                if ( $var->{indel_occured} eq "unknown" ) {
+                    $flag = 1;
+                }
+                else {
+                    my $occ = substr $var->{indel_occured}, $i - 1, 1;
+                    if ( $occ eq '1' ) {
+                        $flag = 1;
+                    }
+                }
+
+                if ($flag) {
+                    if ( $col_taken == 1 ) {
+
+                        # write position
+                        $sheet->write( $pos_row, $col_cursor, $var->{indel_start},
+                            $format_of->{pos} );
+
+                        # write in indel occured lineage
+                        $sheet->write( $pos_row + $i,
+                            $col_cursor, $indel_string, $format_of->{indel}{$bg_idx} );
+                    }
+                    elsif ( $col_taken == 2 ) {
+
+                        # write indel_start position
+                        $sheet->write( $pos_row, $col_cursor, $var->{indel_start},
+                            $format_of->{pos} );
+
+                        # write indel_end position
+                        $sheet->write( $pos_row, $col_cursor + 1,
+                            $var->{indel_end}, $format_of->{pos} );
+
+                        # merge two indel position
+                        $sheet->merge_range(
+                            $pos_row + $i,
+                            $col_cursor,
+                            $pos_row + $i,
+                            $col_cursor + 1,
+                            $indel_string, $format_of->{indel}{$bg_idx},
+                        );
+                    }
+                    else {
+
+                        # write indel_start position
+                        $sheet->write( $pos_row, $col_cursor, $var->{indel_start},
+                            $format_of->{pos} );
+
+                        # write middle sign
+                        $sheet->write( $pos_row, $col_cursor + 1, '|', $format_of->{pos} );
+
+                        # write indel_end position
+                        $sheet->write( $pos_row, $col_cursor + 2,
+                            $var->{indel_end}, $format_of->{pos} );
+
+                        # merge two indel position
+                        $sheet->merge_range(
+                            $pos_row + $i,
+                            $col_cursor,
+                            $pos_row + $i,
+                            $col_cursor + 2,
+                            $indel_string, $format_of->{indel}{$bg_idx},
+                        );
+                    }
+                }
+            }
+
+            # increase column cursor
+            $col_cursor += $col_taken;
+        }
+
+        if ( $col_cursor > $opt->{wrap} ) {
+            $col_cursor = 1;
+            $section_cur++;
+        }
+    }
+
+    # write names
+    for my $i ( $section_start .. $section_cur ) {
+        my $pos_row = $section_height * ( $i - 1 );
+
+        for my $j ( 1 .. scalar @{$name_refs} ) {
+            $sheet->write( $pos_row + $j, 0, $name_refs->[ $j - 1 ], $format_of->{name} );
+        }
+    }
+
+    $section_cur++;
+    return $section_cur;
 }
 
 1;
