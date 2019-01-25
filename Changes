@@ -2,6 +2,8 @@ Revision history for App-Fasops
 
 {{$NEXT}}
 
+    - Add `fasops vars`
+
 0.6.0 2018-04-22T14:40:50Z
 
     - Add `fasops consensus`
