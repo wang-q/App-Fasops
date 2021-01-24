@@ -8,6 +8,9 @@ on:
     tags:
       - '*'
 
+env:
+  IMAGE_NAME: wangq/fasops
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,12 +22,12 @@ jobs:
           persist-credentials: false
 
       - name: Build Docker image
-        run: docker build -t fasops .
+        run: docker build -t "${{ env.IMAGE_NAME }}" .
 
       - name: Run fasops help
-        run: docker run --rm fasops fasops help
+        run: docker run --rm "${{ env.IMAGE_NAME }}" fasops help
 
-      - name: Login Docker Hub
+      - name: Login to Docker Hub
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKER_TOKEN }}
           DOCKERHUB_USER: ${{ secrets.DOCKER_USER }}
