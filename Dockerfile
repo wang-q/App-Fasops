@@ -2,10 +2,10 @@ FROM linuxbrew/brew
 LABEL maintainer="Qiang Wang <wang-q@outlook.com>"
 
 # Build
-# docker build -t fasops .
+# docker build -t wangq/fasops .
 
 # Run
-# docker run --rm fasops fasops help
+# docker run --rm wangq/fasops fasops help
 
 # Github actions
 # https://docs.docker.com/ci-cd/github-actions/
@@ -43,4 +43,7 @@ RUN true \
 WORKDIR /root
 
 RUN true \
- && rm -fr /home/linuxbrew/App-Fasops
+ && rm -fr /home/linuxbrew/App-Fasops \
+ && rm -fr /root/.cpan \
+ && rm -fr /root/.cpanm \
+ && rm -fr /root/.gem
