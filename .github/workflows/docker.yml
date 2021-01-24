@@ -5,8 +5,9 @@ on:
     paths:
       - .github/workflows/docker.yml
       - Dockerfile
-    tags:
-      - '*'
+  release:
+    types:
+      - created
 
 env:
   IMAGE_NAME: wangq/fasops
