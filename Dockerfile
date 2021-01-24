@@ -7,6 +7,9 @@ LABEL maintainer="Qiang Wang <wang-q@outlook.com>"
 # Run
 # docker run --rm fasops fasops help
 
+# Github actions
+# https://docs.docker.com/ci-cd/github-actions/
+
 RUN true \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
