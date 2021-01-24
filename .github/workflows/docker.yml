@@ -1,0 +1,31 @@
+name: Docker
+
+on:
+  push:
+    paths:
+      - .github/workflows/docker.yml
+      - Dockerfile
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build Docker image
+        run: docker build -t fasops .
+
+      - name: Run fasops help
+        run: docker run --rm fasops fasops help
+
+      - name: Login Docker Hub
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          DOCKERHUB_USER: ${{ secrets.DOCKER_USER }}
+        run: echo $DOCKERHUB_TOKEN | docker login --username $DOCKERHUB_USER --password-stdin
