@@ -1,5 +1,5 @@
 name = "App-Fasops"
-badges = ['travis', 'codecov', 'metacpan']
+badges = ['github-actions/build.yml', 'travis', 'codecov', 'metacpan']
 authority="cpan:WANGQ"
 
 module_maker="ModuleBuildTiny"

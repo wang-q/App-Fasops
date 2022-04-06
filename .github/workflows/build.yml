@@ -1,0 +1,46 @@
+name: Build
+
+on: [ push ]
+
+jobs:
+  build:
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'macos-latest' ]
+        perl: [ '5.34', '5.24' ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+
+      - name: Perl version
+        run: perl -V
+
+      - name: Install external deps
+        run: |
+          # brew install --build-from-source brewsci/science/poa
+          brew install brewsci/bio/muscle
+          brew install samtools
+
+      - name: Install CPAN deps
+        run: |
+          cpanm -nq --skip-satisfied Devel::Cover Devel::Cover::Report::Codecovbash # codecov
+          cpanm -nq --installdeps .
+
+      - name: Build
+        run: |
+          perl Build.PL
+          ./Build build
+          cover -test -report codecovbash
+
+      - name: Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: cover_db/codecov.json

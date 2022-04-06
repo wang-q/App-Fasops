@@ -4,7 +4,7 @@
       "Qiang Wang <wang-q@outlook.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.16, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -74,12 +74,12 @@
       "homepage" : "https://github.com/wang-q/App-Fasops",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/wang-q/App-Fasops.git",
+         "url" : "https://github.com/wang-q/App-Fasops.git",
          "web" : "https://github.com/wang-q/App-Fasops"
       }
    },
    "version" : "0.6.4",
    "x_authority" : "cpan:WANGQ",
-   "x_serialization_backend" : "JSON::PP version 4.04",
+   "x_serialization_backend" : "JSON::PP version 4.07",
    "x_static_install" : 1
 }

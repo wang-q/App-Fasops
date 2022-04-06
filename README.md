@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/wang-q/App-Fasops.svg?branch=master)](https://travis-ci.org/wang-q/App-Fasops) [![Coverage Status](http://codecov.io/github/wang-q/App-Fasops/coverage.svg?branch=master)](https://codecov.io/github/wang-q/App-Fasops?branch=master) [![MetaCPAN Release](https://badge.fury.io/pl/App-Fasops.svg)](https://metacpan.org/release/App-Fasops)
+[![Actions Status](https://github.com/wang-q/App-Fasops/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/App-Fasops/actions) [![Build Status](https://travis-ci.org/wang-q/App-Fasops.svg?branch=master)](https://travis-ci.org/wang-q/App-Fasops) [![Coverage Status](http://codecov.io/github/wang-q/App-Fasops/coverage.svg?branch=master)](https://codecov.io/github/wang-q/App-Fasops?branch=master) [![MetaCPAN Release](https://badge.fury.io/pl/App-Fasops.svg)](https://metacpan.org/release/App-Fasops)
 # NAME
 
 App::Fasops - operating blocked fasta files
