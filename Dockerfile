@@ -1,4 +1,4 @@
-FROM linuxbrew/brew
+FROM homebrew/brew
 LABEL maintainer="Qiang Wang <wang-q@outlook.com>"
 
 # Build
@@ -21,16 +21,16 @@ RUN true \
  && export HOMEBREW_NO_ANALYTICS=1 \
  && export HOMEBREW_NO_AUTO_UPDATE=1 \
  && brew install perl \
- && rm -fr $(brew --cache)/* \
  && curl -L https://cpanmin.us | perl - App::cpanminus \
  && chown -R linuxbrew: /home/linuxbrew/.linuxbrew \
  && chmod -R g+w,o-w /home/linuxbrew/.linuxbrew \
+ && rm -fr $(brew --cache)/* \
  && rm -fr /root/.cpan \
  && rm -fr /root/.gem \
  && rm -fr /root/.cpanm
 
 # Change this when Perl updated
-ENV PATH=/home/linuxbrew/.linuxbrew/Cellar/perl/5.32.0/bin:$PATH
+ENV PATH=/home/linuxbrew/.linuxbrew/Cellar/perl/5.34.0/bin:$PATH
 
 WORKDIR /home/linuxbrew/App-Fasops
 ADD . .
