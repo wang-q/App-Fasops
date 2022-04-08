@@ -40,4 +40,4 @@ RUN true \
  && ./Build test \
  && ./Build install \
  && ./Build clean \
- && rm -fr /root/.cpanm
+ && rm -fr $HOME/.cpanm
