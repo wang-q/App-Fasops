@@ -24,7 +24,7 @@ sub description {
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= <<'MARKDOWN';
 
-* <infiles> are paths to axt files, .axt.gz is supported
+* <infiles> are paths to fas files, .fas.gz is supported
 * infile == stdin means reading from STDIN
 
 * <replace.tsv> is a tab-separated file containing more than one fields
@@ -124,7 +124,7 @@ sub execute {
                     }
                 }
                 else {
-                    Carp::carp "Don't support multiply records in one block. @replace_names\n";
+                    Carp::carp "Don't support multiple records in one block. @replace_names\n";
                     for my $header (@ori_names) {
                         printf {$out_fh} ">%s\n",
                             App::RL::Common::encode_header( $info_of->{$header} );
