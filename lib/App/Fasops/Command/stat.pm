@@ -84,7 +84,7 @@ sub execute {
 
     # headers
     my @headers = qw{
-        first legnth comparables identities differences gaps ns errors D indel
+        first length comparables identities differences gaps ns errors D indel
     };
     $csv->print( $out_fh, \@headers );
 

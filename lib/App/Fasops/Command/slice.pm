@@ -177,7 +177,7 @@ sub execute {
                     push @sub_slices, $ss_intspan;
                 }
 
-                # write heasers and sequences
+                # write headers and sequences
                 for my AlignDB::IntSpan $sub_slice (@sub_slices) {
                     my $ss_start = $sub_slice->min;
                     my $ss_end   = $sub_slice->max;
