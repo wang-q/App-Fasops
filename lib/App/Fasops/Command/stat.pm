@@ -30,7 +30,7 @@ sub description {
     $desc .= ucfirst(abstract) . ".\n";
     $desc .= <<'MARKDOWN';
 
-* <infiles> are paths to axt files, .axt.gz is supported
+* <infiles> are paths to fas files, .fas.gz is supported
 * infile == stdin means reading from STDIN
 
 MARKDOWN

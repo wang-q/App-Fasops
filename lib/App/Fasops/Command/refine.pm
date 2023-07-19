@@ -93,7 +93,7 @@ sub execute {
         open $out_fh, ">", $opt->{outfile};
     }
 
-    my @infos;    # collect blocks for parallelly refining
+    my @infos;    # collect blocks for parallel refining
     my $content = '';    # content of one block
     while (1) {
         last if $in_fh->eof and $content eq '';
